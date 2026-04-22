@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DigiSlip</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f0f4f8;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px 24px;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .logo {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a73e8;
+        margin-bottom: 4px;
+      }
+
+      .tagline {
+        font-size: 13px;
+        color: #888;
+        margin-bottom: 24px;
+      }
+
+      .status {
+        font-size: 14px;
+        color: #555;
+        margin-bottom: 16px;
+      }
+
+      .receipt {
+        background: #fafafa;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 16px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin-bottom: 20px;
+      }
+
+      .meta {
+        font-size: 12px;
+        color: #aaa;
+        margin-top: 16px;
+      }
+
+      .error {
+        color: #d32f2f;
+        font-size: 14px;
+      }
+
+      .spinner {
+        text-align: center;
+        color: #888;
+        font-size: 14px;
+        padding: 32px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="logo">DigiSlip</div>
+      <div class="tagline">Your digital receipt</div>
+      <div id="content" class="spinner">Loading your slip...</div>
+    </div>
+
+    <script>
+      // ── Supabase config ───────────────────────────────────────────────────────
+      const SUPABASE_URL    = "https://eivctqjisodfhaitzyiq.supabase.co";
+      const SUPABASE_ANON   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpdmN0cWppc29kZmhhaXR6eWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDgxMjIsImV4cCI6MjA5MjM4NDEyMn0._0wu91Zrc3aMrKsO_KUkp64CoOCklwMViYAofYZyCFI";
+      // ─────────────────────────────────────────────────────────────────────────
+
+      // Read slip ID from URL — e.g. /slip/some-uuid
+      const parts   = window.location.pathname.split("/");
+      const slipId  = parts[parts.length - 1];
+
+      const contentEl = document.getElementById("content");
+
+      if (!slipId || slipId === "slip") {
+        contentEl.innerHTML = '<p class="error">No slip ID in URL.</p>';
+      } else {
+        fetch(`${SUPABASE_URL}/rest/v1/slips?id=eq.${slipId}&select=raw_text,created_at,merchant_id,device_id`, {
+          headers: {
+            "apikey":        SUPABASE_ANON,
+            "Authorization": "Bearer " + SUPABASE_ANON,
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (!data || data.length === 0) {
+            contentEl.innerHTML = '<p class="error">Slip not found. It may have expired.</p>';
+            return;
+          }
+
+          const slip = data[0];
+
+          // Check expiry
+          const createdAt = new Date(slip.created_at);
+          const now       = new Date();
+          const ageHours  = (now - createdAt) / (1000 * 60 * 60);
+          if (ageHours > 24) {
+            contentEl.innerHTML = '<p class="error">This slip has expired.</p>';
+            return;
+          }
+
+          const lines = slip.raw_text ? slip.raw_text : "(No receipt text)";
+          const date  = createdAt.toLocaleString();
+
+          contentEl.innerHTML = `
+            <p class="status">Digital receipt</p>
+            <div class="receipt">${lines}</div>
+            <p class="meta">${date}</p>
+          `;
+        })
+        .catch(err => {
+          contentEl.innerHTML = '<p class="error">Could not load slip: ' + err.message + '</p>';
+        });
+      }
+    </script>
+  </body>
+</html>
