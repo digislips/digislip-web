@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DigiSlip</title>
+  <title>DigiSlip — Go Paperless</title>
+  <meta name="description" content="DigiSlip turns your paper till slip into a digital receipt. Scan, tap, done." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg:      #0d0d0d;
@@ -16,246 +17,460 @@
       --accent2: #6affdb;
       --fg:      #e8e8e8;
       --muted:   #5a5a5a;
-      --error:   #ff6a6a;
-      --receipt: #111111;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       background: var(--bg);
       color: var(--fg);
       font-family: 'DM Mono', monospace;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px 48px;
+      overflow-x: hidden;
     }
 
-    .header { text-align: center; margin-bottom: 32px; }
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,13,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
 
     .logo {
       font-family: 'Syne', sans-serif;
       font-weight: 800;
-      font-size: 36px;
-      letter-spacing: -1px;
+      font-size: 22px;
+      letter-spacing: -0.5px;
       color: var(--accent);
-      line-height: 1;
+      text-decoration: none;
     }
 
     .logo span { color: var(--accent2); }
 
-    .tagline {
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      margin-top: 6px;
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
     }
 
-    .card {
+    .nav-links a {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--fg); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 80px 24px 64px;
+      text-align: center;
+    }
+
+    .hero-pill {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(182,255,106,0.3);
+      background: rgba(182,255,106,0.06);
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(36px, 8vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -2px;
+      color: var(--fg);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero p {
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--muted);
+      max-width: 420px;
+      margin: 0 auto 40px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0d0d0d;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 14px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--fg);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .btn-secondary:hover { border-color: var(--muted); transform: translateY(-1px); }
+
+    /* ── MOCK RECEIPT ── */
+    .mock-wrap {
+      max-width: 360px;
+      margin: 64px auto;
+      padding: 0 24px;
+    }
+
+    .mock-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      width: 100%;
-      max-width: 440px;
       overflow: hidden;
     }
 
-    .card-header {
-      padding: 16px 20px;
+    .mock-header {
+      padding: 14px 18px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .dot {
-      width: 8px; height: 8px;
+    .mock-dot {
+      width: 7px; height: 7px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
-      flex-shrink: 0;
+      box-shadow: 0 0 6px var(--accent);
     }
 
-    .card-label {
-      font-size: 11px;
+    .mock-label {
+      font-size: 10px;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--muted);
     }
 
-    .card-body { padding: 20px; }
-
-    .loading {
-      text-align: center;
-      padding: 48px 20px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .spinner {
-      display: block;
-      width: 28px; height: 28px;
-      margin: 16px auto 0;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .error-state { text-align: center; padding: 40px 20px; }
-    .error-icon  { font-size: 32px; margin-bottom: 12px; }
-    .error-msg   { color: var(--error); font-size: 14px; line-height: 1.6; }
-    .error-sub   { color: var(--muted); font-size: 12px; margin-top: 8px; }
-
-    .receipt-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .badge {
-      font-size: 10px;
+    .mock-badge {
+      margin-left: auto;
+      font-size: 9px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       background: rgba(182,255,106,0.1);
       color: var(--accent);
       border: 1px solid rgba(182,255,106,0.3);
-      padding: 3px 8px;
+      padding: 2px 7px;
       border-radius: 4px;
     }
 
-    .receipt-date { font-size: 11px; color: var(--muted); }
-
-    .receipt-body {
-      background: var(--receipt);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      font-family: 'DM Mono', monospace;
-      font-size: 12.5px;
+    .mock-body {
+      padding: 16px 18px;
+      font-size: 11.5px;
       line-height: 1.9;
-      white-space: pre-wrap;
-      word-break: break-word;
       color: #c8d8b0;
-      max-height: 60vh;
-      overflow-y: auto;
+      font-family: 'DM Mono', monospace;
+      white-space: pre;
     }
 
-    .receipt-body::-webkit-scrollbar { width: 4px; }
-    .receipt-body::-webkit-scrollbar-track { background: transparent; }
-    .receipt-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    /* ── HOW IT WORKS ── */
+    .section {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 64px 24px;
+    }
 
-    .footer { margin-top: 24px; text-align: center; font-size: 11px; color: var(--muted); }
-    .footer a { color: var(--accent2); text-decoration: none; }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 16px;
+    }
+
+    .section h2 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: clamp(24px, 5vw, 36px);
+      letter-spacing: -1px;
+      margin-bottom: 48px;
+      line-height: 1.15;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .step {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 32px;
+      color: var(--border);
+      line-height: 1;
+      flex-shrink: 0;
+      width: 48px;
+    }
+
+    .step-content h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 6px;
+      color: var(--fg);
+    }
+
+    .step-content p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    /* ── FOR MERCHANTS ── */
+    .merchants {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .merchants-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 64px 24px;
+    }
+
+    .merchants h2 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: clamp(24px, 5vw, 36px);
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .merchants p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 480px;
+      margin-bottom: 32px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    @media (max-width: 480px) {
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+
+    .feature-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .feature-icon {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .feature-item h4 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .feature-item p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--accent2); text-decoration: none; }
+
+    .coming-soon {
+      display: inline-block;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="logo">digi<span>slip</span></div>
-    <div class="tagline">Digital receipt</div>
+  <nav>
+    <a href="/" class="logo">digi<span>slip</span></a>
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#merchants">Merchants</a></li>
+      <li><a href="#" style="color:var(--accent)">Get the app <span class="coming-soon">Soon</span></a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-pill">Now in pilot — Cape Town</div>
+    <h1>Your till slip,<br><em>gone digital.</em></h1>
+    <p>No app required. Scan the QR code or tap your card at checkout — your receipt lives on your phone, not in a pile on your kitchen counter.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">Get the app <span class="coming-soon" style="color:#0d0d0d;border-color:rgba(0,0,0,0.2)">Soon</span></a>
+      <a href="#how-it-works" class="btn-secondary">See how it works</a>
+    </div>
+  </section>
+
+  <!-- MOCK RECEIPT -->
+  <div class="mock-wrap">
+    <div class="mock-card">
+      <div class="mock-header">
+        <div class="mock-dot"></div>
+        <span class="mock-label">Your receipt</span>
+        <span class="mock-badge">Verified</span>
+      </div>
+      <div class="mock-body">BEAN THERE
+Gardens Centre, Cape Town
+----------------------------------
+24 Apr 2026  12:31      Till: #1
+----------------------------------
+Flat White (Reg)          R 38.00
+----------------------------------
+TOTAL                     R 38.00
+Cash                      R 50.00
+Change                    R 12.00
+----------------------------------
+Enjoy your coffee!</div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <div class="dot" id="statusDot"></div>
-      <span class="card-label" id="cardLabel">Loading slip...</span>
-    </div>
-    <div class="card-body" id="cardBody">
-      <div class="loading">
-        Fetching your receipt
-        <span class="spinner"></span>
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="section-label">How it works</div>
+    <h2>Three steps.<br>Zero paper.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h3>Pay as usual</h3>
+          <p>Nothing changes at checkout. DigiSlip works silently in the background — no new hardware for the cashier, no extra steps for you.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h3>Scan or tap</h3>
+          <p>A QR code appears on the till screen. Scan it with your phone camera, or tap your NFC card if you've registered one.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h3>Your receipt, instantly</h3>
+          <p>Your full receipt opens in your browser — no app needed to view it. Available for 24 hours, with the app coming soon for permanent history.</p>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="footer">
-    Go paperless with <a href="https://digislips.co.za">DigiSlip</a>
-  </div>
+  <!-- FOR MERCHANTS -->
+  <section class="merchants" id="merchants">
+    <div class="merchants-inner">
+      <div class="section-label">For merchants</div>
+      <h2>Plug in.<br>Go paperless.</h2>
+      <p>DigiSlip installs between your existing POS machine and thermal printer. No software changes, no training, no disruption. Your till keeps working exactly as it does today.</p>
+      <a href="mailto:hello@digislips.co.za" class="btn-secondary">Get in touch →</a>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <h4>Works with any POS</h4>
+          <p>Hardware-level interception. If it prints a receipt, DigiSlip works with it.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📶</div>
+          <h4>Offline resilient</h4>
+          <p>Slips queue locally when WiFi drops. Uploads automatically when connection restores.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔒</div>
+          <h4>Secure by design</h4>
+          <p>Each device has a unique token. Slips expire after 24 hours. Row-level security throughout.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📊</div>
+          <h4>Analytics coming</h4>
+          <p>Basket size, peak hours, loyalty insights — all from the receipt data you already generate.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <script>
-    var SUPABASE_URL  = "https://eivctqjisodfhaitzyiq.supabase.co";
-    var SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpdmN0cWppc29kZmhhaXR6eWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDgxMjIsImV4cCI6MjA5MjM4NDEyMn0._0wu91Zrc3aMrKsO_KUkp64CoOCklwMViYAofYZyCFI";
+  <footer>
+    <p>© 2026 DigiSlip · Cape Town, South Africa · <a href="mailto:hello@digislips.co.za">hello@digislips.co.za</a></p>
+  </footer>
 
-    function getSlipId() {
-      var params = new URLSearchParams(window.location.search);
-      if (params.get("id"))   return params.get("id");
-      if (params.get("slip")) return params.get("slip");
-      var parts  = window.location.pathname.split("/").filter(Boolean);
-      var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      for (var i = parts.length - 1; i >= 0; i--) {
-        if (uuidRe.test(parts[i])) return parts[i];
-      }
-      return null;
-    }
-
-    var dot   = document.getElementById("statusDot");
-    var label = document.getElementById("cardLabel");
-    var body  = document.getElementById("cardBody");
-
-    function showError(icon, msg, sub) {
-      dot.style.background = "var(--error)";
-      dot.style.boxShadow  = "0 0 8px var(--error)";
-      label.textContent    = "Could not load slip";
-      body.innerHTML =
-        '<div class="error-state">' +
-          '<div class="error-icon">' + icon + '</div>' +
-          '<div class="error-msg">'  + msg  + '</div>' +
-          (sub ? '<div class="error-sub">' + sub + '</div>' : '') +
-        '</div>';
-    }
-
-    var slipId = getSlipId();
-
-    if (!slipId) {
-      showError("!", "No slip ID found in this URL.", "Make sure you scanned the correct QR code.");
-    } else {
-      fetch(
-        SUPABASE_URL + "/rest/v1/slips?id=eq." + slipId + "&select=raw_text,created_at,merchant_id,device_id",
-        { headers: { "apikey": SUPABASE_ANON, "Authorization": "Bearer " + SUPABASE_ANON } }
-      )
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data || data.length === 0) {
-          showError("?", "Slip not found.", "It may have expired or the link may be incorrect.");
-          return;
-        }
-
-        var slip      = data[0];
-        var createdAt = new Date(slip.created_at);
-        var ageHours  = (Date.now() - createdAt) / 3600000;
-
-        if (ageHours > 24) {
-          showError("!", "This slip has expired.", "Slips are available for 24 hours after the transaction.");
-          return;
-        }
-
-        var text = (slip.raw_text || "(No receipt text)")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-
-        var date = createdAt.toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
-
-        label.textContent = "Your receipt";
-        body.innerHTML =
-          '<div class="receipt-meta">' +
-            '<span class="badge">Verified</span>' +
-            '<span class="receipt-date">' + date + '</span>' +
-          '</div>' +
-          '<div class="receipt-body">' + text + '</div>';
-      })
-      .catch(function(err) {
-        showError("!", "Could not connect to DigiSlip servers.", err.message);
-      });
-    }
-  </script>
 </body>
 </html>

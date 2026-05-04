@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/slip/:id", "destination": "/slip/index.html" }
+  ]
+}
