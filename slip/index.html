@@ -6,179 +6,254 @@
   <title>DigiSlip — Your Receipt</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg:      #0d0d0d;
-      --surface: #161616;
-      --border:  #2a2a2a;
-      --accent:  #b6ff6a;
-      --accent2: #6affdb;
-      --fg:      #e8e8e8;
-      --muted:   #5a5a5a;
-      --error:   #ff6a6a;
-      --receipt: #111111;
+      --page:     #E8E4DA;
+      --card:     #FEFDFB;
+      --text:     #1C1917;
+      --muted:    #78716C;
+      --faint:    #D6D3CD;
+      --green:    #059669;
+      --green-lt: #ECFDF5;
+      --green-bd: #A7F3D0;
+      --red:      #DC2626;
+      --red-lt:   #FEF2F2;
+      --red-bd:   #FECACA;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: var(--bg);
-      color: var(--fg);
-      font-family: 'DM Mono', monospace;
+      background-color: var(--page);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 24px 16px 48px;
+      padding: 48px 16px 80px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
     }
 
-    .header { text-align: center; margin-bottom: 32px; }
-
-    .logo {
+    /* ─── wordmark ─── */
+    .wordmark {
+      display: inline-block;
       font-family: 'Syne', sans-serif;
       font-weight: 800;
-      font-size: 36px;
-      letter-spacing: -1px;
-      color: var(--accent);
-      line-height: 1;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+      color: var(--text);
       text-decoration: none;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.45s ease forwards;
     }
+    .wordmark .s { color: var(--green); }
 
-    .logo span { color: var(--accent2); }
-
-    .tagline {
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      margin-top: 6px;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+    /* ─── receipt wrap ─── */
+    /* drop-shadow traces the actual painted pixels — follows scalloped perf edges */
+    .receipt-wrap {
       width: 100%;
-      max-width: 440px;
-      overflow: hidden;
+      max-width: 360px;
+      opacity: 0;
+      animation: fadeUp 0.45s 0.1s ease forwards;
+      filter:
+        drop-shadow(0 2px 4px rgba(0,0,0,0.07))
+        drop-shadow(0 8px 28px rgba(0,0,0,0.11));
     }
 
-    .card-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
+    /* ─── perforated edges ─── */
+    /* Transparent semicircles punched out of card-white — body bg shows through the holes.
+       drop-shadow above traces around the opaque card pixels, giving a scalloped shadow. */
+    .perf {
+      height: 8px;
+      width: 100%;
+      display: block;
+    }
+    .perf-top {
+      background:
+        radial-gradient(circle at 5px 0, transparent 4px, var(--card) 4px)
+        0 0 / 10px 8px repeat-x;
+    }
+    .perf-bottom {
+      background:
+        radial-gradient(circle at 5px 8px, transparent 4px, var(--card) 4px)
+        0 0 / 10px 8px repeat-x;
+    }
+
+    /* ─── card body ─── */
+    .card {
+      background: var(--card);
+      padding: 22px 22px 26px;
+    }
+
+    /* ─── status bar ─── */
+    .status-bar {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      margin-bottom: 18px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .status-bar.ok {
+      background: var(--green-lt);
+      color: var(--green);
+      border: 1px solid var(--green-bd);
+    }
+    .status-bar.err {
+      background: var(--red-lt);
+      color: var(--red);
+      border: 1px solid var(--red-bd);
+    }
+    .status-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+    .status-right {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: 0.75;
+      letter-spacing: 0.04em;
+      text-transform: none;
     }
 
-    .dot {
-      width: 8px; height: 8px;
+    /* ─── receipt text zone ─── */
+    .receipt-zone {
+      position: relative;
+      overflow: hidden;
+      min-height: 80px;
+    }
+    /* faint diagonal watermark — brand anchor behind the text */
+    .receipt-zone::before {
+      content: 'DIGITAL';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-25deg);
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 72px;
+      letter-spacing: 0.15em;
+      color: var(--green);
+      opacity: 0.03;
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .receipt-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      line-height: 1.9;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      position: relative;
+      z-index: 1;
+    }
+
+    .dash-rule {
+      border: none;
+      border-top: 1px dashed var(--faint);
+      margin: 18px 0;
+    }
+
+    .expiry-note {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .expiry-pip {
+      width: 4px; height: 4px;
       border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
+      background: var(--muted);
       flex-shrink: 0;
     }
 
-    .card-label {
-      font-size: 11px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--muted);
+    /* ─── skeleton loading ─── */
+    .skeleton { padding: 4px 0; }
+    .sk {
+      height: 11px;
+      border-radius: 2px;
+      background: linear-gradient(
+        90deg,
+        var(--faint) 0%,
+        #EDE9DF 40%,
+        var(--faint) 80%
+      );
+      background-size: 300% 100%;
+      animation: shimmer 1.8s infinite;
+      margin-bottom: 9px;
+    }
+    .sk:last-child { margin-bottom: 0; }
+    @keyframes shimmer {
+      0%   { background-position: 100% 0; }
+      100% { background-position: -200% 0; }
     }
 
-    .card-body { padding: 20px; }
+    /* ─── error state ─── */
+    .error-body { text-align: center; padding: 16px 0 8px; }
+    .error-icon { font-size: 26px; margin-bottom: 10px; }
+    .error-msg  { font-size: 13px; line-height: 1.6; color: var(--red); }
+    .error-sub  { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
 
-    .loading {
-      text-align: center;
-      padding: 48px 20px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .spinner {
-      display: block;
-      width: 28px; height: 28px;
-      margin: 16px auto 0;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .error-state { text-align: center; padding: 40px 20px; }
-    .error-icon  { font-size: 32px; margin-bottom: 12px; }
-    .error-msg   { color: var(--error); font-size: 14px; line-height: 1.6; }
-    .error-sub   { color: var(--muted); font-size: 12px; margin-top: 8px; }
-
-    .receipt-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .badge {
+    /* ─── footer ─── */
+    .site-footer {
+      margin-top: 22px;
       font-size: 10px;
-      letter-spacing: 0.12em;
+      color: var(--muted);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      background: rgba(182,255,106,0.1);
-      color: var(--accent);
-      border: 1px solid rgba(182,255,106,0.3);
-      padding: 3px 8px;
-      border-radius: 4px;
+      text-align: center;
+      opacity: 0;
+      animation: fadeUp 0.45s 0.2s ease forwards;
     }
+    .site-footer a { color: var(--green); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
 
-    .receipt-date { font-size: 11px; color: var(--muted); }
-
-    .receipt-body {
-      background: var(--receipt);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      font-family: 'DM Mono', monospace;
-      font-size: 12.5px;
-      line-height: 1.9;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: #c8d8b0;
-      max-height: 60vh;
-      overflow-y: auto;
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    .receipt-body::-webkit-scrollbar { width: 4px; }
-    .receipt-body::-webkit-scrollbar-track { background: transparent; }
-    .receipt-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    .footer { margin-top: 24px; text-align: center; font-size: 11px; color: var(--muted); }
-    .footer a { color: var(--accent2); text-decoration: none; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <a href="/" class="logo">digi<span>slip</span></a>
-    <div class="tagline">Digital receipt</div>
-  </div>
+  <a href="/" class="wordmark">digi<span class="s">slip</span></a>
 
-  <div class="card">
-    <div class="card-header">
-      <div class="dot" id="statusDot"></div>
-      <span class="card-label" id="cardLabel">Loading slip...</span>
-    </div>
-    <div class="card-body" id="cardBody">
-      <div class="loading">
-        Fetching your receipt
-        <span class="spinner"></span>
+  <div class="receipt-wrap">
+    <div class="perf perf-top"></div>
+    <div class="card" id="card">
+      <div class="skeleton">
+        <div class="sk" style="width:55%"></div>
+        <div class="sk" style="width:88%"></div>
+        <div class="sk" style="width:40%"></div>
+        <div class="sk" style="width:72%"></div>
+        <div class="sk" style="width:95%"></div>
+        <div class="sk" style="width:60%"></div>
+        <div class="sk" style="width:78%"></div>
+        <div class="sk" style="width:85%"></div>
+        <div class="sk" style="width:48%"></div>
+        <div class="sk" style="width:92%"></div>
+        <div class="sk" style="width:35%"></div>
       </div>
     </div>
+    <div class="perf perf-bottom"></div>
   </div>
 
-  <div class="footer">
-    Go paperless with <a href="/">DigiSlip</a>
+  <div class="site-footer">
+    Go paperless &nbsp;·&nbsp; <a href="/">DigiSlip</a>
   </div>
 
   <script>
@@ -186,27 +261,53 @@
     var SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpdmN0cWppc29kZmhhaXR6eWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDgxMjIsImV4cCI6MjA5MjM4NDEyMn0._0wu91Zrc3aMrKsO_KUkp64CoOCklwMViYAofYZyCFI";
 
     function getSlipId() {
-      // Path-based: /slip/<uuid>
       var parts  = window.location.pathname.split("/").filter(Boolean);
       var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       for (var i = parts.length - 1; i >= 0; i--) {
         if (uuidRe.test(parts[i])) return parts[i];
       }
-      // Query param fallback: ?id=<uuid>
       var params = new URLSearchParams(window.location.search);
       return params.get("id") || params.get("slip") || null;
     }
 
-    var dot   = document.getElementById("statusDot");
-    var label = document.getElementById("cardLabel");
-    var body  = document.getElementById("cardBody");
+    var card = document.getElementById("card");
 
-    function showError(icon, msg, sub) {
-      dot.style.background = "var(--error)";
-      dot.style.boxShadow  = "0 0 8px var(--error)";
-      label.textContent    = "Could not load slip";
-      body.innerHTML =
-        '<div class="error-state">' +
+    function renderOk(rawText, createdAt) {
+      var ageMs     = Date.now() - createdAt.getTime();
+      var hoursLeft = Math.max(0, 24 - ageMs / 3600000);
+      var expiry    = hoursLeft < 1
+        ? "Expires in less than 1 hour"
+        : "Expires in " + Math.floor(hoursLeft) + " hours";
+      var date = createdAt.toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
+
+      var safe = (rawText || "(No receipt text)")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      card.innerHTML =
+        '<div class="status-bar ok">' +
+          '<span class="status-dot"></span>' +
+          '<span>Verified</span>' +
+          '<span class="status-right">' + date + '</span>' +
+        '</div>' +
+        '<div class="receipt-zone">' +
+          '<div class="receipt-text">' + safe + '</div>' +
+        '</div>' +
+        '<hr class="dash-rule">' +
+        '<div class="expiry-note">' +
+          '<span class="expiry-pip"></span>' +
+          '<span>' + expiry + '</span>' +
+        '</div>';
+    }
+
+    function renderErr(icon, msg, sub) {
+      card.innerHTML =
+        '<div class="status-bar err">' +
+          '<span class="status-dot"></span>' +
+          '<span>Could not load slip</span>' +
+        '</div>' +
+        '<div class="error-body">' +
           '<div class="error-icon">' + icon + '</div>' +
           '<div class="error-msg">'  + msg  + '</div>' +
           (sub ? '<div class="error-sub">' + sub + '</div>' : '') +
@@ -216,45 +317,28 @@
     var slipId = getSlipId();
 
     if (!slipId) {
-      showError("!", "No slip ID found in this URL.", "Make sure you scanned the correct QR code.");
+      renderErr("!", "No slip ID found in this URL.", "Make sure you scanned the correct QR code.");
     } else {
       fetch(
         SUPABASE_URL + "/rest/v1/slips?id=eq." + slipId + "&select=raw_text,created_at,merchant_id,device_id",
-        { headers: { "apikey": SUPABASE_ANON, "Authorization": "Bearer " + SUPABASE_ANON } }
+        { headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON } }
       )
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (!data || data.length === 0) {
-          showError("?", "Slip not found.", "It may have expired or the link may be incorrect.");
+          renderErr("?", "Slip not found.", "It may have expired or the link may be incorrect.");
           return;
         }
-
         var slip      = data[0];
         var createdAt = new Date(slip.created_at);
-        var ageHours  = (Date.now() - createdAt) / 3600000;
-
-        if (ageHours > 24) {
-          showError("!", "This slip has expired.", "Slips are available for 24 hours after the transaction.");
+        if ((Date.now() - createdAt.getTime()) / 3600000 > 24) {
+          renderErr("!", "This slip has expired.", "Slips are available for 24 hours after the transaction.");
           return;
         }
-
-        var text = (slip.raw_text || "(No receipt text)")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-
-        var date = createdAt.toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
-
-        label.textContent = "Your receipt";
-        body.innerHTML =
-          '<div class="receipt-meta">' +
-            '<span class="badge">Verified</span>' +
-            '<span class="receipt-date">' + date + '</span>' +
-          '</div>' +
-          '<div class="receipt-body">' + text + '</div>';
+        renderOk(slip.raw_text, createdAt);
       })
       .catch(function(err) {
-        showError("!", "Could not connect to DigiSlip servers.", err.message);
+        renderErr("!", "Could not connect to DigiSlip servers.", err.message);
       });
     }
   </script>
