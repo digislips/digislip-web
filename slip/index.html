@@ -661,18 +661,27 @@
 
     var card = document.getElementById("card");
 
-    function renderOk(rawText, createdAt) {
-      var ageMs     = Date.now() - createdAt.getTime();
-      var hoursLeft = Math.max(0, 24 - ageMs / 3600000);
-      var expiry    = hoursLeft < 1
-        ? "Expires in less than 1 hour"
-        : "Expires in " + Math.floor(hoursLeft) + " hours";
+    function renderOk(rawText, createdAt, claimed) {
       var date = createdAt.toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
 
       var safe = (rawText || "(No receipt text)")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
+
+      var expiryHtml = "";
+      if (!claimed) {
+        var hoursLeft = Math.max(0, 24 - (Date.now() - createdAt.getTime()) / 3600000);
+        var expiry    = hoursLeft < 1
+          ? "Expires in less than 1 hour"
+          : "Expires in " + Math.floor(hoursLeft) + " hours";
+        expiryHtml =
+          '<hr class="dash-rule">' +
+          '<div class="expiry-note">' +
+            '<span class="expiry-pip"></span>' +
+            '<span>' + expiry + '</span>' +
+          '</div>';
+      }
 
       card.innerHTML =
         '<div class="status-bar ok">' +
@@ -683,11 +692,7 @@
         '<div class="receipt-zone">' +
           '<div class="receipt-text">' + safe + '</div>' +
         '</div>' +
-        '<hr class="dash-rule">' +
-        '<div class="expiry-note">' +
-          '<span class="expiry-pip"></span>' +
-          '<span>' + expiry + '</span>' +
-        '</div>';
+        expiryHtml;
     }
 
     function renderErr(icon, msg, sub) {
@@ -709,7 +714,7 @@
       renderErr("!", "No slip ID found in this URL.", "Make sure you scanned the correct QR code.");
     } else {
       fetch(
-        SUPABASE_URL + "/rest/v1/slips?id=eq." + slipId + "&select=raw_text,created_at,merchant_id,device_id",
+        SUPABASE_URL + "/rest/v1/slips?id=eq." + slipId + "&select=raw_text,created_at,merchant_id,device_id,claimed",
         { headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON } }
       )
       .then(function(r) { return r.json(); })
@@ -720,7 +725,7 @@
         }
         var slip      = data[0];
         var createdAt = new Date(slip.created_at);
-        renderOk(slip.raw_text, createdAt);
+        renderOk(slip.raw_text, createdAt, slip.claimed);
       })
       .catch(function(err) {
         renderErr("!", "Could not connect to DigiSlips servers.", err.message);
