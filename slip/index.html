@@ -22,6 +22,9 @@
       --red:      #DC2626;
       --red-lt:   #FEF2F2;
       --red-bd:   #FECACA;
+      --amber:    #D97706;
+      --amber-lt: #FFFBEB;
+      --amber-bd: #FDE68A;
       --dark:     #1C1917;
     }
 
@@ -200,6 +203,11 @@
       background: var(--red-lt);
       color: var(--red);
       border: 1px solid var(--red-bd);
+    }
+    .status-bar.unclaimed {
+      background: var(--amber-lt);
+      color: var(--amber);
+      border: 1px solid var(--amber-bd);
     }
     .status-dot {
       width: 5px; height: 5px;
@@ -684,9 +692,9 @@
       }
 
       card.innerHTML =
-        '<div class="status-bar ok">' +
+        '<div class="status-bar ' + (claimed ? 'ok' : 'unclaimed') + '">' +
           '<span class="status-dot"></span>' +
-          '<span>Verified</span>' +
+          '<span>' + (claimed ? 'Claimed' : 'Unclaimed') + '</span>' +
           '<span class="status-right">' + date + '</span>' +
         '</div>' +
         '<div class="receipt-zone">' +
