@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "co.za.digislips.app",
+    "sha256_cert_fingerprints": [
+      "C9:0A:C0:1E:62:11:1D:C2:D2:16:F3:9E:16:D1:B9:A9:77:D6:59:7D:90:30:07:7E:06:2E:72:74:1D:CD:8F:8A"
+    ]
+  }
+}]
