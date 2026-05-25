@@ -557,8 +557,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    var SUPABASE_URL  = "https://eivctqjisodfhaitzyiq.supabase.co";
-    var SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpdmN0cWppc29kZmhhaXR6eWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDgxMjIsImV4cCI6MjA5MjM4NDEyMn0._0wu91Zrc3aMrKsO_KUkp64CoOCklwMViYAofYZyCFI";
+    var GET_SLIP_URL = "https://eivctqjisodfhaitzyiq.supabase.co/functions/v1/get-slip";
 
     /* ─── menu ─── */
     var menuOpen = false;
@@ -721,19 +720,19 @@
     if (!slipId) {
       renderErr("!", "No slip ID found in this URL.", "Make sure you scanned the correct QR code.");
     } else {
-      fetch(
-        SUPABASE_URL + "/rest/v1/slips?id=eq." + slipId + "&select=raw_text,created_at,merchant_id,device_id,claimed",
-        { headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON } }
-      )
+      fetch(GET_SLIP_URL + "?id=" + slipId)
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (!data || data.length === 0) {
+        if (data.error === "not_found") {
           renderErr("?", "Slip not found.", "It may have expired or the link may be incorrect.");
           return;
         }
-        var slip      = data[0];
-        var createdAt = new Date(slip.created_at);
-        renderOk(slip.raw_text, createdAt, slip.claimed);
+        if (data.error) {
+          renderErr("!", "Could not load slip.", data.error);
+          return;
+        }
+        var createdAt = new Date(data.created_at);
+        renderOk(data.raw_text, createdAt, data.claimed);
       })
       .catch(function(err) {
         renderErr("!", "Could not connect to DigiSlips servers.", err.message);
