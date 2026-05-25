@@ -10,10 +10,12 @@ Digital receipt (till slip) service for South African retail. Customers claim an
 
 ## Project structure
 ```
-index.html          Landing page
-slip/index.html     Receipt viewer (dynamic, loaded by /slip/:id via Vercel rewrite)
-privacy/index.html  Privacy policy (POPIA-compliant)
-vercel.json         Rewrite rule: /slip/:id → /slip/index.html
+index.html                        Landing page
+slip/index.html                   Receipt viewer (dynamic, loaded by /slip/:id via Vercel rewrite)
+privacy/index.html                Privacy policy (POPIA-compliant)
+vendor/html2canvas-1.4.1.min.js   Bundled PDF library (do not load from CDN)
+vendor/jspdf-2.5.1.umd.min.js     Bundled PDF library (do not load from CDN)
+vercel.json                       Rewrite rule: /slip/:id → /slip/index.html
 ```
 
 ## Design system
@@ -38,6 +40,17 @@ Expiry rules:
 - A Supabase scheduled function deletes unclaimed slips once `expires_at` passes (24h after creation)
 - Claimed slips (`claimed = true`) are never deleted and must always be accessible
 - The web viewer must NOT apply its own expiry gate — if Supabase returns a slip, it is valid
+
+## Slip viewer architecture (security-hardened May 2026)
+- `slip/index.html` calls the `get-slip` Edge Function — NOT the Supabase Data API directly
+- Edge Function URL: `https://eivctqjisodfhaitzyiq.supabase.co/functions/v1/get-slip?id=<uuid>`
+- The Supabase anon key must NOT appear anywhere in the web source — it was removed May 2026
+- The Edge Function uses the service role key server-side; CORS is locked to digislips.co.za
+- PDF libraries (html2canvas, jsPDF) are served from `vendor/` — never load from a CDN
+
+## Slip viewer status display
+- `claimed = true` → green status bar, label "Claimed", no expiry note
+- `claimed = false` → amber status bar, label "Unclaimed", shows countdown to expiry
 
 ## Branding
 - Product name: **DigiSlips** (plural, capital S)
