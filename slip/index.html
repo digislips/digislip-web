@@ -720,10 +720,6 @@
         }
         var slip      = data[0];
         var createdAt = new Date(slip.created_at);
-        if ((Date.now() - createdAt.getTime()) / 3600000 > 24) {
-          renderErr("!", "This slip has expired.", "Slips are available for 24 hours after the transaction.");
-          return;
-        }
         renderOk(slip.raw_text, createdAt);
       })
       .catch(function(err) {
