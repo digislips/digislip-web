@@ -1,6 +1,6 @@
 # DigiSlips Web
 
-Digital receipt (till slip) service for South African retail. Customers claim and store slips electronically via NFC tap or QR code at a merchant's POS device.
+Digital receipt (till slip) service for South African retail. Customers claim and store slips electronically via NFC tap or QR code scan from a DigiSlip capture device installed between the merchant's existing POS machine and thermal printer.
 
 ## Stack
 - Vanilla HTML/CSS/JS — no build step, no framework
@@ -55,3 +55,7 @@ Expiry rules:
 ## Branding
 - Product name: **DigiSlips** (plural, capital S)
 - Logo markup: `<span class="d">digi</span><span class="s">Slips</span>` (blue/green split)
+- Contact email: support.digislips@gmail.com
+- No em dashes in copy — use periods or colons instead
+- No emoji icons — use inline Lucide SVGs (stroke-width 1.5, 18×18)
+- The DigiSlip hardware is a capture/interception device, never a "POS device" or "till screen"
