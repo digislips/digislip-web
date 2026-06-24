@@ -124,10 +124,10 @@ describe('fitReceiptText', () => {
   const { fitReceiptText } = require('./slip-logic');
 
   test('wide line — font size scales down to fit', () => {
-    // 42 chars at 0.67 ratio in 284px → 284/(42*0.67) ≈ 10.1px
+    // 42 chars at 0.60 ratio in 284px → 284/(42*0.60) ≈ 11.3px
     const raw = 'A'.repeat(42) + '\n';
     const { fontSize } = fitReceiptText(raw, 284);
-    expect(fontSize).toBeCloseTo(10.1, 0);
+    expect(fontSize).toBeCloseTo(11.3, 0);
   });
 
   test('short receipt — clamps at MAX_FONT_SIZE (13)', () => {
@@ -145,7 +145,7 @@ describe('fitReceiptText', () => {
   test('widest line across multiple lines drives the size', () => {
     const raw = 'SHORT\n' + 'A'.repeat(42) + '\nSHORT\n';
     const { fontSize } = fitReceiptText(raw, 284);
-    expect(fontSize).toBeCloseTo(10.1, 0);
+    expect(fontSize).toBeCloseTo(11.3, 0);
   });
 
   test('empty text — clamps at MAX_FONT_SIZE', () => {

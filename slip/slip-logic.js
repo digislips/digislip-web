@@ -29,7 +29,7 @@ function getSlipId(pathname, search) {
   return (id && uuidRe.test(id)) ? id : null;
 }
 
-var MONO_CHAR_RATIO  = 0.67;
+var MONO_CHAR_RATIO  = 0.60;
 var MIN_FONT_SIZE    = 9;
 var MAX_FONT_SIZE    = 13;
 
