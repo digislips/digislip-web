@@ -642,6 +642,16 @@
         });
       }
 
+      // Fit font size so the widest receipt line never wraps at 284px content width
+      var pdfTexts = document.getElementById('pdf-card').querySelectorAll('.receipt-text');
+      if (pdfTexts.length) {
+        var combined = Array.prototype.map.call(pdfTexts, function(el) { return el.textContent; }).join('\n');
+        var fit = fitReceiptText(combined, 284);
+        Array.prototype.forEach.call(pdfTexts, function(el) {
+          el.style.fontSize = fit.fontSize + 'px';
+        });
+      }
+
       showToast('Generating PDF…');
 
       function generate() {
