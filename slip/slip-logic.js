@@ -14,6 +14,7 @@ function parseSlipResponse(data) {
     createdAt:     new Date(data.created_at),
     claimed:       !!data.claimed,
     parsedContent: data.parsed_content || null,
+    logoUrl:       data.logo_url || null,
   };
 }
 
@@ -28,10 +29,23 @@ function getSlipId(pathname, search) {
   return (id && uuidRe.test(id)) ? id : null;
 }
 
-function buildTextSegments(rawText, barcodes) {
-  var segments = [{ type: 'text', content: rawText || '' }];
+function buildTextSegments(rawText, barcodes, logoUrl) {
+  var text = rawText || '';
+
+  if (logoUrl) {
+    text = text.replace(/^0s\n?/, '');
+    var segments = [{ type: 'logo', url: logoUrl }, { type: 'text', content: text }];
+    if (!barcodes || !barcodes.length) return segments;
+    return applyBarcodes(segments, barcodes);
+  }
+
+  var segments = [{ type: 'text', content: text }];
   if (!barcodes || !barcodes.length) return segments;
 
+  return applyBarcodes(segments, barcodes);
+}
+
+function applyBarcodes(segments, barcodes) {
   var unplaced = [];
 
   barcodes.forEach(function(bc) {

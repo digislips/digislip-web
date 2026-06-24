@@ -65,6 +65,27 @@ describe('parseSlipResponse', () => {
     expect(result.type).toBe('ok');
     expect(result.parsedContent).toEqual(parsedContent);
   });
+
+  test('logo_url threaded through as logoUrl', () => {
+    const result = parseSlipResponse({
+      raw_text:   'CITY FRESH',
+      created_at: '2026-06-24T10:00:00.000Z',
+      claimed:    false,
+      logo_url:   'https://example.com/logo.png',
+    });
+    expect(result.type).toBe('ok');
+    expect(result.logoUrl).toBe('https://example.com/logo.png');
+  });
+
+  test('logoUrl is null when logo_url absent', () => {
+    const result = parseSlipResponse({
+      raw_text:   'SPAR',
+      created_at: '2026-06-24T10:00:00.000Z',
+      claimed:    false,
+    });
+    expect(result.type).toBe('ok');
+    expect(result.logoUrl).toBeNull();
+  });
 });
 
 describe('getSlipId', () => {
@@ -148,5 +169,47 @@ describe('buildTextSegments', () => {
   test('null rawText — returns empty text segment', () => {
     const segs = buildTextSegments(null, null);
     expect(segs).toEqual([{ type: 'text', content: '' }]);
+  });
+
+  test('logo: 0s artifact stripped and logo prepended', () => {
+    const raw = '0s\nCITY FRESH\nTotal: R50\n';
+    const segs = buildTextSegments(raw, null, 'https://example.com/logo.png');
+    expect(segs).toEqual([
+      { type: 'logo', url: 'https://example.com/logo.png' },
+      { type: 'text', content: 'CITY FRESH\nTotal: R50\n' },
+    ]);
+  });
+
+  test('logo: no 0s artifact — logo still prepended, text unchanged', () => {
+    const raw = 'CITY FRESH\nTotal: R50\n';
+    const segs = buildTextSegments(raw, null, 'https://example.com/logo.png');
+    expect(segs).toEqual([
+      { type: 'logo', url: 'https://example.com/logo.png' },
+      { type: 'text', content: 'CITY FRESH\nTotal: R50\n' },
+    ]);
+  });
+
+  test('logo: null logoUrl — no logo segment', () => {
+    const raw = '0s\nCITY FRESH\n';
+    const segs = buildTextSegments(raw, null, null);
+    expect(segs).toEqual([{ type: 'text', content: '0s\nCITY FRESH\n' }]);
+  });
+
+  test('logo: 0s artifact not visible in text segments', () => {
+    const raw = '0s\nCITY FRESH\n';
+    const segs = buildTextSegments(raw, null, 'https://example.com/logo.png');
+    const text = segs.filter(s => s.type === 'text').map(s => s.content).join('');
+    expect(text).not.toContain('0s');
+  });
+
+  test('logo and barcode together — logo first, barcode inline', () => {
+    const raw = '0s\nScan your card\n{B9782504938271\nThank you\n';
+    const segs = buildTextSegments(raw, [{ type: 'CODE128', value: '9782504938271' }], 'https://example.com/logo.png');
+    expect(segs).toEqual([
+      { type: 'logo',    url:     'https://example.com/logo.png' },
+      { type: 'text',   content: 'Scan your card\n' },
+      { type: 'barcode', value:  '9782504938271' },
+      { type: 'text',   content: 'Thank you\n' },
+    ]);
   });
 });
