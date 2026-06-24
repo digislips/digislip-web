@@ -646,7 +646,7 @@
       var pdfTexts = document.getElementById('pdf-card').querySelectorAll('.receipt-text');
       if (pdfTexts.length) {
         var combined = Array.prototype.map.call(pdfTexts, function(el) { return el.textContent; }).join('\n');
-        var fit = fitReceiptText(combined, 284);
+        var fit = fitReceiptText(combined, 276);
         Array.prototype.forEach.call(pdfTexts, function(el) {
           el.style.fontSize = fit.fontSize + 'px';
         });
