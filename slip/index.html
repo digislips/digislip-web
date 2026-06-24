@@ -286,6 +286,13 @@
       margin: 0 auto;
     }
 
+    /* ─── merchant logo ─── */
+    .receipt-logo {
+      display: block;
+      max-width: 100%;
+      margin: 0 auto 12px;
+    }
+
     /* ─── skeleton ─── */
     .skeleton { padding: 4px 0; }
     .sk {
@@ -698,7 +705,7 @@
     /* ─── slip loading ─── */
     var card = document.getElementById("card");
 
-    function renderOk(rawText, createdAt, claimed, parsedContent) {
+    function renderOk(rawText, createdAt, claimed, parsedContent, logoUrl) {
       currentParsedContent = parsedContent || null;
 
       var date = createdAt.toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
@@ -708,13 +715,16 @@
       }
 
       var barcodes = parsedContent && parsedContent.barcodes;
-      var segments = buildTextSegments(rawText, barcodes);
+      var segments = buildTextSegments(rawText, barcodes, logoUrl || null);
 
       var receiptZoneHtml = segments.map(function(seg) {
         if (seg.type === 'text') {
           return seg.content
             ? '<div class="receipt-text">' + esc(seg.content) + '</div>'
             : '';
+        }
+        if (seg.type === 'logo') {
+          return '<img src="' + esc(seg.url) + '" class="receipt-logo" alt="">';
         }
         return '<div class="barcode-section">' +
           '<canvas data-barcode-value="' + esc(seg.value) + '"></canvas>' +
@@ -790,7 +800,7 @@
         } else if (result.type === 'error') {
           renderErr("!", "Could not load slip.", result.message);
         } else {
-          renderOk(result.rawText, result.createdAt, result.claimed, result.parsedContent);
+          renderOk(result.rawText, result.createdAt, result.claimed, result.parsedContent, result.logoUrl);
         }
       })
       .catch(function(err) {
