@@ -28,4 +28,42 @@ function getSlipId(pathname, search) {
   return (id && uuidRe.test(id)) ? id : null;
 }
 
-if (typeof module !== 'undefined') module.exports = { parseSlipResponse, getSlipId };
+function buildTextSegments(rawText, barcodes) {
+  var segments = [{ type: 'text', content: rawText || '' }];
+  if (!barcodes || !barcodes.length) return segments;
+
+  var unplaced = [];
+
+  barcodes.forEach(function(bc) {
+    var marker = '{B' + bc.value;
+    var found = false;
+    var result = [];
+
+    segments.forEach(function(seg) {
+      if (seg.type !== 'text') { result.push(seg); return; }
+      var idx = seg.content.indexOf(marker);
+      if (idx === -1) { result.push(seg); return; }
+      found = true;
+      var lineEnd = seg.content.indexOf('\n', idx);
+      var before = seg.content.slice(0, idx);
+      var after = lineEnd === -1 ? '' : seg.content.slice(lineEnd + 1);
+      if (before) result.push({ type: 'text', content: before });
+      result.push({ type: 'barcode', value: bc.value });
+      if (after) result.push({ type: 'text', content: after });
+    });
+
+    if (found) {
+      segments = result;
+    } else {
+      unplaced.push(bc);
+    }
+  });
+
+  unplaced.forEach(function(bc) {
+    segments.push({ type: 'barcode', value: bc.value });
+  });
+
+  return segments;
+}
+
+if (typeof module !== 'undefined') module.exports = { parseSlipResponse, getSlipId, buildTextSegments };

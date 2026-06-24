@@ -685,13 +685,13 @@
           height:      10,
           includetext: false
         });
-        if (canvas.width > 316) {
-          canvas.style.width  = '316px';
-          canvas.style.height = Math.round(canvas.height * 316 / canvas.width) + 'px';
+        var maxW = (canvas.parentElement && canvas.parentElement.offsetWidth) || 272;
+        if (canvas.width > maxW) {
+          canvas.style.width  = maxW + 'px';
+          canvas.style.height = Math.round(canvas.height * maxW / canvas.width) + 'px';
         }
       } catch (e) {
-        var parent = canvas.parentElement;
-        if (parent) parent.remove();
+        if (canvas.parentElement) canvas.parentElement.remove();
       }
     }
 
@@ -703,17 +703,34 @@
 
       var date = createdAt.toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
 
-      var safe = (rawText || "(No receipt text)")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+      function esc(s) {
+        return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
 
-      var expiryHtml = "";
+      var barcodes = parsedContent && parsedContent.barcodes;
+      var segments = buildTextSegments(rawText, barcodes);
+
+      var receiptZoneHtml = segments.map(function(seg) {
+        if (seg.type === 'text') {
+          return seg.content
+            ? '<div class="receipt-text">' + esc(seg.content) + '</div>'
+            : '';
+        }
+        return '<div class="barcode-section">' +
+          '<canvas data-barcode-value="' + esc(seg.value) + '"></canvas>' +
+          '</div>';
+      }).join('');
+
+      if (!receiptZoneHtml) {
+        receiptZoneHtml = '<div class="receipt-text">(No receipt text)</div>';
+      }
+
+      var expiryHtml = '';
       if (!claimed) {
         var hoursLeft = Math.max(0, 24 - (Date.now() - createdAt.getTime()) / 3600000);
         var expiry    = hoursLeft < 1
-          ? "Expires in less than 1 hour"
-          : "Expires in " + Math.floor(hoursLeft) + " hours";
+          ? 'Expires in less than 1 hour'
+          : 'Expires in ' + Math.floor(hoursLeft) + ' hours';
         expiryHtml =
           '<hr class="dash-rule">' +
           '<div class="expiry-note">' +
@@ -728,31 +745,20 @@
           '<span>' + (claimed ? 'Claimed' : 'Unclaimed') + '</span>' +
           '<span class="status-right">' + date + '</span>' +
         '</div>' +
-        '<div class="receipt-zone">' +
-          '<div class="receipt-text">' + safe + '</div>' +
-        '</div>' +
+        '<div class="receipt-zone">' + receiptZoneHtml + '</div>' +
         expiryHtml;
 
-      var barcodes = parsedContent && parsedContent.barcodes;
-      if (barcodes && barcodes.length > 0) {
-        function appendBarcodes() {
-          barcodes.forEach(function(bc) {
-            var divider = document.createElement('hr');
-            divider.className = 'dash-rule';
-            card.appendChild(divider);
-            var section = document.createElement('div');
-            section.className = 'barcode-section';
-            var canvas = document.createElement('canvas');
-            canvas.setAttribute('data-barcode-value', bc.value);
-            section.appendChild(canvas);
-            card.appendChild(section);
-            renderBarcode(canvas, bc.value);
+      var slots = card.querySelectorAll('canvas[data-barcode-value]');
+      if (slots.length > 0) {
+        function renderSlots() {
+          slots.forEach(function(canvas) {
+            renderBarcode(canvas, canvas.getAttribute('data-barcode-value'));
           });
         }
         if (window.bwipjs) {
-          appendBarcodes();
+          renderSlots();
         } else {
-          loadScript('/vendor/bwip-js-4.11.1.min.js', appendBarcodes);
+          loadScript('/vendor/bwip-js-4.11.1.min.js', renderSlots);
         }
       }
     }

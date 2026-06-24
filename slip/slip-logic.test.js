@@ -1,4 +1,4 @@
-const { parseSlipResponse, getSlipId } = require('./slip-logic');
+const { parseSlipResponse, getSlipId, buildTextSegments } = require('./slip-logic');
 
 describe('parseSlipResponse', () => {
   test('auth error via code field shows error, not garbage receipt', () => {
@@ -96,5 +96,57 @@ describe('getSlipId', () => {
 
   test('rejects malformed UUID in query param', () => {
     expect(getSlipId('/', '?id=not-a-uuid')).toBeNull();
+  });
+});
+
+describe('buildTextSegments', () => {
+  const BARCODE = { type: 'CODE128', value: '9782504938271', position: 'bottom' };
+  const MARKER_LINE = '{B9782504938271\n';
+
+  test('marker found — splits into text / barcode / text', () => {
+    const raw = 'PEP REWARDS\nScan your card\n' + MARKER_LINE + 'Thank you\n';
+    const segs = buildTextSegments(raw, [BARCODE]);
+    expect(segs).toEqual([
+      { type: 'text',    content: 'PEP REWARDS\nScan your card\n' },
+      { type: 'barcode', value:   '9782504938271' },
+      { type: 'text',    content: 'Thank you\n' },
+    ]);
+  });
+
+  test('marker not found — barcode appended at bottom', () => {
+    const raw = 'PEP REWARDS\nScan your card\n';
+    const segs = buildTextSegments(raw, [BARCODE]);
+    expect(segs).toEqual([
+      { type: 'text',    content: 'PEP REWARDS\nScan your card\n' },
+      { type: 'barcode', value:   '9782504938271' },
+    ]);
+  });
+
+  test('artifact line is stripped from visible text', () => {
+    const raw = 'Before\n' + MARKER_LINE + 'After\n';
+    const segs = buildTextSegments(raw, [BARCODE]);
+    const textContent = segs.filter(s => s.type === 'text').map(s => s.content).join('');
+    expect(textContent).not.toContain('{B');
+    expect(textContent).not.toContain('9782504938271');
+  });
+
+  test('marker at end of text — no trailing text segment', () => {
+    const raw = 'Scan your card\n' + MARKER_LINE;
+    const segs = buildTextSegments(raw, [BARCODE]);
+    expect(segs).toEqual([
+      { type: 'text',    content: 'Scan your card\n' },
+      { type: 'barcode', value:   '9782504938271' },
+    ]);
+  });
+
+  test('no barcodes — returns single text segment unchanged', () => {
+    const raw = 'PEP STORES\nTotal: R100\n';
+    expect(buildTextSegments(raw, [])).toEqual([{ type: 'text', content: raw }]);
+    expect(buildTextSegments(raw, null)).toEqual([{ type: 'text', content: raw }]);
+  });
+
+  test('null rawText — returns empty text segment', () => {
+    const segs = buildTextSegments(null, null);
+    expect(segs).toEqual([{ type: 'text', content: '' }]);
   });
 });
