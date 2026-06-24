@@ -276,6 +276,16 @@
       flex-shrink: 0;
     }
 
+    /* ─── barcode ─── */
+    .barcode-section {
+      text-align: center;
+      padding: 4px 0 2px;
+    }
+    .barcode-section canvas {
+      display: block;
+      margin: 0 auto;
+    }
+
     /* ─── skeleton ─── */
     .skeleton { padding: 4px 0; }
     .sk {
@@ -617,6 +627,13 @@
       document.getElementById('pdf-card').innerHTML =
         document.getElementById('card').innerHTML;
 
+      // Re-render barcode canvases (innerHTML copy loses canvas pixel data)
+      if (window.bwipjs) {
+        document.getElementById('pdf-card').querySelectorAll('canvas[data-barcode-value]').forEach(function(c) {
+          renderBarcode(c, c.getAttribute('data-barcode-value'));
+        });
+      }
+
       showToast('Generating PDF…');
 
       function generate() {
@@ -655,6 +672,28 @@
       );
     }
 
+    /* ─── barcode rendering ─── */
+    var currentParsedContent = null;
+
+    function renderBarcode(canvas, value) {
+      try {
+        bwipjs.toCanvas(canvas, {
+          bcid:        'code128',
+          text:        value,
+          scale:       3,
+          height:      10,
+          includetext: false
+        });
+        if (canvas.width > 316) {
+          canvas.style.width  = '316px';
+          canvas.style.height = Math.round(canvas.height * 316 / canvas.width) + 'px';
+        }
+      } catch (e) {
+        var parent = canvas.parentElement;
+        if (parent) parent.remove();
+      }
+    }
+
     /* ─── slip loading ─── */
     function getSlipId() {
       var parts  = window.location.pathname.split("/").filter(Boolean);
@@ -668,7 +707,9 @@
 
     var card = document.getElementById("card");
 
-    function renderOk(rawText, createdAt, claimed) {
+    function renderOk(rawText, createdAt, claimed, parsedContent) {
+      currentParsedContent = parsedContent || null;
+
       var date = createdAt.toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
 
       var safe = (rawText || "(No receipt text)")
@@ -700,6 +741,29 @@
           '<div class="receipt-text">' + safe + '</div>' +
         '</div>' +
         expiryHtml;
+
+      var barcodes = parsedContent && parsedContent.barcodes;
+      if (barcodes && barcodes.length > 0) {
+        function appendBarcodes() {
+          barcodes.forEach(function(bc) {
+            var divider = document.createElement('hr');
+            divider.className = 'dash-rule';
+            card.appendChild(divider);
+            var section = document.createElement('div');
+            section.className = 'barcode-section';
+            var canvas = document.createElement('canvas');
+            canvas.setAttribute('data-barcode-value', bc.value);
+            section.appendChild(canvas);
+            card.appendChild(section);
+            renderBarcode(canvas, bc.value);
+          });
+        }
+        if (window.bwipjs) {
+          appendBarcodes();
+        } else {
+          loadScript('/vendor/bwip-js-4.11.1.min.js', appendBarcodes);
+        }
+      }
     }
 
     function renderErr(icon, msg, sub) {
@@ -732,7 +796,7 @@
           return;
         }
         var createdAt = new Date(data.created_at);
-        renderOk(data.raw_text, createdAt, data.claimed);
+        renderOk(data.raw_text, createdAt, data.claimed, data.parsed_content);
       })
       .catch(function(err) {
         renderErr("!", "Could not connect to DigiSlips servers.", err.message);
