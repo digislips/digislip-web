@@ -120,6 +120,40 @@ describe('getSlipId', () => {
   });
 });
 
+describe('fitReceiptText', () => {
+  const { fitReceiptText } = require('./slip-logic');
+
+  test('wide line — font size scales down to fit', () => {
+    // 42 chars at 0.67 ratio in 284px → 284/(42*0.67) ≈ 10.1px
+    const raw = 'A'.repeat(42) + '\n';
+    const { fontSize } = fitReceiptText(raw, 284);
+    expect(fontSize).toBeCloseTo(10.1, 0);
+  });
+
+  test('short receipt — clamps at MAX_FONT_SIZE (13)', () => {
+    const raw = 'SHORT\n';
+    const { fontSize } = fitReceiptText(raw, 284);
+    expect(fontSize).toBe(13);
+  });
+
+  test('extremely wide line — clamps at MIN_FONT_SIZE (9)', () => {
+    const raw = 'A'.repeat(60) + '\n';
+    const { fontSize } = fitReceiptText(raw, 284);
+    expect(fontSize).toBe(9);
+  });
+
+  test('widest line across multiple lines drives the size', () => {
+    const raw = 'SHORT\n' + 'A'.repeat(42) + '\nSHORT\n';
+    const { fontSize } = fitReceiptText(raw, 284);
+    expect(fontSize).toBeCloseTo(10.1, 0);
+  });
+
+  test('empty text — clamps at MAX_FONT_SIZE', () => {
+    const { fontSize } = fitReceiptText('', 284);
+    expect(fontSize).toBe(13);
+  });
+});
+
 describe('buildTextSegments', () => {
   const BARCODE = { type: 'CODE128', value: '9782504938271', position: 'bottom' };
   const MARKER_LINE = '{B9782504938271\n';

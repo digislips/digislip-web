@@ -29,6 +29,19 @@ function getSlipId(pathname, search) {
   return (id && uuidRe.test(id)) ? id : null;
 }
 
+var MONO_CHAR_RATIO  = 0.67;
+var MIN_FONT_SIZE    = 9;
+var MAX_FONT_SIZE    = 13;
+
+function fitReceiptText(rawText, availableWidth) {
+  var lines  = (rawText || '').split('\n');
+  var widest = Math.max.apply(null, lines.map(function(l) { return l.length; }));
+  if (!widest) return { fontSize: MAX_FONT_SIZE };
+  var raw      = availableWidth / (widest * MONO_CHAR_RATIO);
+  var fontSize = Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, raw));
+  return { fontSize: fontSize };
+}
+
 function buildTextSegments(rawText, barcodes, logoUrl) {
   var text = rawText || '';
 
@@ -80,4 +93,4 @@ function applyBarcodes(segments, barcodes) {
   return segments;
 }
 
-if (typeof module !== 'undefined') module.exports = { parseSlipResponse, getSlipId, buildTextSegments };
+if (typeof module !== 'undefined') module.exports = { parseSlipResponse, getSlipId, buildTextSegments, fitReceiptText };
