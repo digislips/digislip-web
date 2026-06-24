@@ -566,6 +566,7 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="/slip/slip-logic.js"></script>
   <script>
     var GET_SLIP_URL = "https://eivctqjisodfhaitzyiq.supabase.co/functions/v1/get-slip";
 
@@ -695,16 +696,6 @@
     }
 
     /* ─── slip loading ─── */
-    function getSlipId() {
-      var parts  = window.location.pathname.split("/").filter(Boolean);
-      var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      for (var i = parts.length - 1; i >= 0; i--) {
-        if (uuidRe.test(parts[i])) return parts[i];
-      }
-      var params = new URLSearchParams(window.location.search);
-      return params.get("id") || params.get("slip") || null;
-    }
-
     var card = document.getElementById("card");
 
     function renderOk(rawText, createdAt, claimed, parsedContent) {
@@ -779,7 +770,7 @@
         '</div>';
     }
 
-    var slipId = getSlipId();
+    var slipId = getSlipId(window.location.pathname, window.location.search);
 
     if (!slipId) {
       renderErr("!", "No slip ID found in this URL.", "Make sure you scanned the correct QR code.");
@@ -787,16 +778,14 @@
       fetch(GET_SLIP_URL + "?id=" + slipId)
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (data.error === "not_found") {
+        var result = parseSlipResponse(data);
+        if (result.type === 'not_found') {
           renderErr("?", "Slip not found.", "It may have expired or the link may be incorrect.");
-          return;
+        } else if (result.type === 'error') {
+          renderErr("!", "Could not load slip.", result.message);
+        } else {
+          renderOk(result.rawText, result.createdAt, result.claimed, result.parsedContent);
         }
-        if (data.error) {
-          renderErr("!", "Could not load slip.", data.error);
-          return;
-        }
-        var createdAt = new Date(data.created_at);
-        renderOk(data.raw_text, createdAt, data.claimed, data.parsed_content);
       })
       .catch(function(err) {
         renderErr("!", "Could not connect to DigiSlips servers.", err.message);
