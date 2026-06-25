@@ -42,20 +42,36 @@ function fitReceiptText(rawText, availableWidth) {
   return { fontSize: fontSize };
 }
 
+function extractBarcodesFromText(text) {
+  var result = [];
+  var re = /\{B(\S+)/g;
+  var m;
+  while ((m = re.exec(text)) !== null) {
+    result.push({ value: m[1] });
+  }
+  return result;
+}
+
 function buildTextSegments(rawText, barcodes, logoUrl) {
   var text = rawText || '';
+
+  // If the backend's ESC/POS parser missed any barcodes, pick them up from {B<value> markers in the text
+  var fromText = extractBarcodesFromText(text);
+  var knownValues = (barcodes || []).map(function(b) { return b.value; });
+  var extra = fromText.filter(function(b) { return knownValues.indexOf(b.value) === -1; });
+  var allBarcodes = (barcodes || []).concat(extra);
 
   if (logoUrl) {
     text = text.replace(/^0s\n?/, '');
     var segments = [{ type: 'logo', url: logoUrl }, { type: 'text', content: text }];
-    if (!barcodes || !barcodes.length) return segments;
-    return applyBarcodes(segments, barcodes);
+    if (!allBarcodes.length) return segments;
+    return applyBarcodes(segments, allBarcodes);
   }
 
   var segments = [{ type: 'text', content: text }];
-  if (!barcodes || !barcodes.length) return segments;
+  if (!allBarcodes.length) return segments;
 
-  return applyBarcodes(segments, barcodes);
+  return applyBarcodes(segments, allBarcodes);
 }
 
 function applyBarcodes(segments, barcodes) {
@@ -93,4 +109,4 @@ function applyBarcodes(segments, barcodes) {
   return segments;
 }
 
-if (typeof module !== 'undefined') module.exports = { parseSlipResponse, getSlipId, buildTextSegments, fitReceiptText };
+if (typeof module !== 'undefined') module.exports = { parseSlipResponse, getSlipId, buildTextSegments, fitReceiptText, extractBarcodesFromText };

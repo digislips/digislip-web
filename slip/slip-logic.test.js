@@ -1,4 +1,4 @@
-const { parseSlipResponse, getSlipId, buildTextSegments } = require('./slip-logic');
+const { parseSlipResponse, getSlipId, buildTextSegments, extractBarcodesFromText } = require('./slip-logic');
 
 describe('parseSlipResponse', () => {
   test('auth error via code field shows error, not garbage receipt', () => {
@@ -234,6 +234,27 @@ describe('buildTextSegments', () => {
     const segs = buildTextSegments(raw, null, 'https://example.com/logo.png');
     const text = segs.filter(s => s.type === 'text').map(s => s.content).join('');
     expect(text).not.toContain('0s');
+  });
+
+  test('parsed_content.barcodes empty but {B marker in text — barcode still rendered (fallback)', () => {
+    const raw = 'Scan your card\n{B9782504938271\nThank you\n';
+    const segs = buildTextSegments(raw, []);
+    expect(segs).toEqual([
+      { type: 'text',    content: 'Scan your card\n' },
+      { type: 'barcode', value:   '9782504938271' },
+      { type: 'text',    content: 'Thank you\n' },
+    ]);
+  });
+
+  test('logo + empty barcodes + {B in text — logo, barcode inline (CITY FRESH regression)', () => {
+    const raw = '0s\nCITY FRESH\nScan your card\n{B9782504938271\nThank you\n';
+    const segs = buildTextSegments(raw, [], 'https://example.com/logo.png');
+    expect(segs).toEqual([
+      { type: 'logo',    url:     'https://example.com/logo.png' },
+      { type: 'text',   content: 'CITY FRESH\nScan your card\n' },
+      { type: 'barcode', value:  '9782504938271' },
+      { type: 'text',   content: 'Thank you\n' },
+    ]);
   });
 
   test('logo and barcode together — logo first, barcode inline', () => {
