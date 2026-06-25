@@ -24,6 +24,10 @@ vercel.json                       Rewrite rule: /slip/:id → /slip/index.html
 - Noisy background texture via inline SVG data URI
 - Max content width: 720px
 
+## Tooling
+- **Supabase CLI** is installed and linked to the project (`supabase` is on PATH). Deploy an Edge Function from `digislip-backend/` with `supabase functions deploy <function-name>`. No `--project-ref` flag needed — the project is already linked.
+- **Deno** is installed via winget but is NOT on PATH. Full path: `C:\Users\SOMO-CAD\AppData\Local\Microsoft\WinGet\Packages\DenoLand.Deno_Microsoft.Winget.Source_8wekyb3d8bbwe\deno.exe`. Use `$deno = "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\DenoLand.Deno_Microsoft.Winget.Source_8wekyb3d8bbwe\deno.exe"` in PowerShell before running Deno commands.
+
 ## Legal / compliance
 - Governed by POPIA (Protection of Personal Information Act, 2013), South Africa
 - DigiSlips is the responsible party; merchants are operators
