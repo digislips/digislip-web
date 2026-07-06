@@ -2,6 +2,9 @@
 
 Digital receipt (till slip) service for South African retail. Customers claim and store slips electronically via NFC tap or QR code scan from a DigiSlip capture device installed between the merchant's existing POS machine and thermal printer.
 
+## Workflow
+- After a planning or grilling session (e.g. `/grill-me`, `/grill-with-docs`, plan mode), stop and let the user review the resulting plan before starting implementation. Don't jump straight from the last grilling answer into building — wait for explicit go-ahead.
+
 ## Stack
 - Vanilla HTML/CSS/JS — no build step, no framework
 - Hosted on Vercel

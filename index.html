@@ -416,6 +416,122 @@
       line-height: 1.75;
     }
 
+    /* ─── paper savings calculator ─── */
+    .calc-wow {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11px;
+      line-height: 1.7;
+      color: #A8A29E;
+      background: rgba(0,201,106,0.06);
+      border: 1px solid rgba(0,201,106,0.18);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .calc-wow svg { flex-shrink: 0; margin-top: 2px; color: var(--green); }
+    .calc-wow strong { color: #F5F5F0; font-weight: 500; }
+    .calc-wow em { font-style: normal; opacity: 0.7; }
+
+    .calculator {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 22px 20px 20px;
+      margin-bottom: 24px;
+    }
+
+    .calc-slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .calc-slider-label { font-size: 11px; letter-spacing: 0.04em; color: #D6D3CD; }
+
+    .calc-number {
+      width: 76px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #2C2825;
+      border-radius: 6px;
+      color: #F5F5F0;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .calc-number:focus { outline: none; border-color: var(--green); }
+
+    .calc-slider {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: #2C2825;
+      margin-bottom: 24px;
+      cursor: pointer;
+    }
+    .calc-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid #0D1F14;
+      cursor: pointer;
+    }
+    .calc-slider::-moz-range-thumb {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid #0D1F14;
+      cursor: pointer;
+    }
+
+    .calc-results {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 480px) {
+      .calc-results { grid-template-columns: 1fr; }
+    }
+
+    .calc-stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 16px 14px;
+      text-align: center;
+    }
+    .calc-stat .feature-icon { display: flex; justify-content: center; margin-bottom: 8px; }
+    .calc-value {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(20px, 5vw, 26px);
+      color: #F5F5F0;
+      line-height: 1;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .calc-label {
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #78716C;
+    }
+
+    .calc-footnote {
+      font-size: 10px;
+      line-height: 1.7;
+      color: #57534E;
+    }
+
     /* ─── footer ─── */
     footer {
       border-top: 1px solid var(--faint);
@@ -508,6 +624,40 @@ Enjoy your coffee!</div>
       <div class="section-label">For merchants</div>
       <h2>Plug in.<br>Go paperless.</h2>
       <p class="merchants-sub">DigiSlips installs between your existing POS machine and thermal printer. No software changes, no training, no disruption. Your till keeps working exactly as it does today.</p>
+
+      <div class="calc-wow">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        <span>South Africa prints an estimated <strong>9.8 billion</strong> till slips every year <em>(estimate)</em>. See what your store alone could save below.</span>
+      </div>
+
+      <div class="calculator">
+        <div class="calc-slider-row">
+          <label for="slipsSlider" class="calc-slider-label">Average till slips per day</label>
+          <input type="number" id="slipsNumber" class="calc-number" min="0" max="2000" value="200" aria-label="Till slips per day">
+        </div>
+        <input type="range" id="slipsSlider" class="calc-slider" min="0" max="2000" step="10" value="200" aria-label="Till slips per day slider">
+
+        <div class="calc-results">
+          <div class="calc-stat">
+            <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z"/><path d="M12 22v-3"/></svg></div>
+            <div class="calc-value" id="statTrees">0.0</div>
+            <div class="calc-label">Trees saved / year</div>
+          </div>
+          <div class="calc-stat">
+            <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg></div>
+            <div class="calc-value" id="statPaper">0</div>
+            <div class="calc-label">Kg paper / year</div>
+          </div>
+          <div class="calc-stat">
+            <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+            <div class="calc-value" id="statCost">R0</div>
+            <div class="calc-label">Rand saved / year</div>
+          </div>
+        </div>
+
+        <p class="calc-footnote">Estimate assumes a 20cm average till slip on a 57mm × 40m thermal roll (~125g, ~R5/roll) and ~24 trees per ton of paper (~38kg/tree). For illustration only, not an audited figure.</p>
+      </div>
+
       <a href="mailto:support.digislips@gmail.com" class="btn-dark">Get in touch →</a>
       <div class="feature-grid">
         <div class="feature-item">
@@ -537,6 +687,90 @@ Enjoy your coffee!</div>
   <footer>
     <p>© 2026 DigiSlips · Cape Town, South Africa · <a href="mailto:support.digislips@gmail.com">support.digislips@gmail.com</a> · <a href="/privacy">Privacy Policy</a></p>
   </footer>
+
+  <script>
+    (function () {
+      var SLIP_LENGTH_CM = 20;
+      var ROLL_LENGTH_CM = 4000;
+      var ROLL_WEIGHT_G = 125;
+      var ROLL_COST_R = 5;
+      var KG_PER_TREE = 38;
+
+      var slipsPerRoll = ROLL_LENGTH_CM / SLIP_LENGTH_CM;
+      var weightPerSlipG = ROLL_WEIGHT_G / slipsPerRoll;
+      var costPerSlipR = ROLL_COST_R / slipsPerRoll;
+
+      var slider = document.getElementById('slipsSlider');
+      var number = document.getElementById('slipsNumber');
+      var statTrees = document.getElementById('statTrees');
+      var statPaper = document.getElementById('statPaper');
+      var statCost = document.getElementById('statCost');
+
+      if (!slider || !number || !statTrees || !statPaper || !statCost) return;
+
+      var current = { trees: 0, paper: 0, cost: 0 };
+      var raf = null;
+
+      function compute(slipsPerDay) {
+        var annualSlips = slipsPerDay * 365;
+        var paperKg = (annualSlips * weightPerSlipG) / 1000;
+        var trees = paperKg / KG_PER_TREE;
+        var cost = annualSlips * costPerSlipR;
+        return { trees: trees, paper: paperKg, cost: cost };
+      }
+
+      function formatRand(n) {
+        return 'R' + Math.round(n).toLocaleString('en-ZA');
+      }
+
+      function animateTo(target, duration) {
+        if (raf) cancelAnimationFrame(raf);
+        var start = { trees: current.trees, paper: current.paper, cost: current.cost };
+        var t0 = performance.now();
+
+        function tick(now) {
+          var p = Math.min((now - t0) / duration, 1);
+          var eased = 1 - Math.pow(1 - p, 3);
+          current.trees = start.trees + (target.trees - start.trees) * eased;
+          current.paper = start.paper + (target.paper - start.paper) * eased;
+          current.cost = start.cost + (target.cost - start.cost) * eased;
+
+          statTrees.textContent = current.trees.toFixed(1);
+          statPaper.textContent = Math.round(current.paper).toLocaleString('en-ZA');
+          statCost.textContent = formatRand(current.cost);
+
+          if (p < 1) raf = requestAnimationFrame(tick);
+        }
+        raf = requestAnimationFrame(tick);
+      }
+
+      function update(value, duration) {
+        var slipsPerDay = Math.max(0, Math.min(2000, Number(value) || 0));
+        slider.value = slipsPerDay;
+        number.value = slipsPerDay;
+        animateTo(compute(slipsPerDay), duration);
+      }
+
+      slider.addEventListener('input', function () { update(slider.value, 200); });
+      number.addEventListener('input', function () { update(number.value, 200); });
+
+      var section = document.querySelector('.calculator');
+      var started = false;
+      if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !started) {
+              started = true;
+              update(slider.value, 1200);
+            }
+          });
+        }, { threshold: 0.4 });
+        observer.observe(section);
+      } else {
+        update(slider.value, 0);
+      }
+    })();
+  </script>
 
 </body>
 </html>
