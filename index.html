@@ -464,6 +464,9 @@
       text-align: center;
     }
     .calc-number:focus { outline: none; border-color: var(--green); }
+    .calc-number::-webkit-outer-spin-button,
+    .calc-number::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .calc-number { -moz-appearance: textfield; }
 
     .calc-slider {
       width: 100%;
@@ -508,16 +511,20 @@
       border-radius: 10px;
       padding: 16px 14px;
       text-align: center;
+      min-width: 0;
     }
     .calc-stat .feature-icon { display: flex; justify-content: center; margin-bottom: 8px; }
     .calc-value {
       font-family: 'Syne', sans-serif;
       font-weight: 800;
-      font-size: clamp(20px, 5vw, 26px);
+      font-size: clamp(16px, 4.4vw, 21px);
       color: #F5F5F0;
       line-height: 1;
       margin-bottom: 6px;
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .calc-label {
       font-size: 10px;
@@ -633,9 +640,9 @@ Enjoy your coffee!</div>
       <div class="calculator">
         <div class="calc-slider-row">
           <label for="slipsSlider" class="calc-slider-label">Average till slips per day</label>
-          <input type="number" id="slipsNumber" class="calc-number" min="0" max="2000" value="200" aria-label="Till slips per day">
+          <input type="text" id="slipsNumber" class="calc-number" inputmode="numeric" pattern="[0-9]*" value="200" aria-label="Till slips per day">
         </div>
-        <input type="range" id="slipsSlider" class="calc-slider" min="0" max="2000" step="10" value="200" aria-label="Till slips per day slider">
+        <input type="range" id="slipsSlider" class="calc-slider" min="0" max="1000" step="1" value="460" aria-label="Till slips per day slider (logarithmic)">
 
         <div class="calc-results">
           <div class="calc-stat">
@@ -700,6 +707,14 @@ Enjoy your coffee!</div>
       var weightPerSlipG = ROLL_WEIGHT_G / slipsPerRoll;
       var costPerSlipR = ROLL_COST_R / slipsPerRoll;
 
+      // Slider is a log scale: dragging maps to MIN_SLIPS..MAX_SLIPS
+      // across SLIDER_STEPS positions, so small stores (tens/day) get as
+      // much drag precision as huge chains (hundreds of thousands/day).
+      var MIN_SLIPS = 1;
+      var MAX_SLIPS = 1000000;
+      var SLIDER_STEPS = 1000;
+      var TEXT_FIELD_CAP = 1e12; // sanity ceiling for typed values only
+
       var slider = document.getElementById('slipsSlider');
       var number = document.getElementById('slipsNumber');
       var statTrees = document.getElementById('statTrees');
@@ -711,6 +726,19 @@ Enjoy your coffee!</div>
       var current = { trees: 0, paper: 0, cost: 0 };
       var raf = null;
 
+      function sliderPosToSlips(pos) {
+        var p = pos / SLIDER_STEPS;
+        if (p <= 0) return 0;
+        return Math.round(MIN_SLIPS * Math.pow(MAX_SLIPS / MIN_SLIPS, p));
+      }
+
+      function slipsToSliderPos(slips) {
+        if (slips <= MIN_SLIPS) return 0;
+        var clamped = Math.min(slips, MAX_SLIPS);
+        var p = Math.log(clamped / MIN_SLIPS) / Math.log(MAX_SLIPS / MIN_SLIPS);
+        return Math.round(p * SLIDER_STEPS);
+      }
+
       function compute(slipsPerDay) {
         var annualSlips = slipsPerDay * 365;
         var paperKg = (annualSlips * weightPerSlipG) / 1000;
@@ -719,7 +747,22 @@ Enjoy your coffee!</div>
         return { trees: trees, paper: paperKg, cost: cost };
       }
 
+      var COMPACT_THRESHOLD = 1e4;
+      var TREES_COMPACT_THRESHOLD = 1e3;
+      var compactFormatter = new Intl.NumberFormat('en-ZA', { notation: 'compact', maximumFractionDigits: 0 });
+
+      function formatCount(n) {
+        if (Math.abs(n) >= COMPACT_THRESHOLD) return compactFormatter.format(n);
+        return Math.round(n).toLocaleString('en-ZA');
+      }
+
+      function formatTrees(n) {
+        if (Math.abs(n) >= TREES_COMPACT_THRESHOLD) return compactFormatter.format(n);
+        return n.toFixed(1);
+      }
+
       function formatRand(n) {
+        if (Math.abs(n) >= COMPACT_THRESHOLD) return 'R' + compactFormatter.format(n);
         return 'R' + Math.round(n).toLocaleString('en-ZA');
       }
 
@@ -735,24 +778,41 @@ Enjoy your coffee!</div>
           current.paper = start.paper + (target.paper - start.paper) * eased;
           current.cost = start.cost + (target.cost - start.cost) * eased;
 
-          statTrees.textContent = current.trees.toFixed(1);
-          statPaper.textContent = Math.round(current.paper).toLocaleString('en-ZA');
+          statTrees.textContent = formatTrees(current.trees);
+          statPaper.textContent = formatCount(current.paper);
           statCost.textContent = formatRand(current.cost);
+          statTrees.title = current.trees.toFixed(1);
+          statPaper.title = Math.round(current.paper).toLocaleString('en-ZA') + ' kg';
+          statCost.title = 'R' + Math.round(current.cost).toLocaleString('en-ZA');
 
           if (p < 1) raf = requestAnimationFrame(tick);
         }
         raf = requestAnimationFrame(tick);
       }
 
-      function update(value, duration) {
-        var slipsPerDay = Math.max(0, Math.min(2000, Number(value) || 0));
-        slider.value = slipsPerDay;
-        number.value = slipsPerDay;
-        animateTo(compute(slipsPerDay), duration);
+      function setSlips(slipsPerDay, duration) {
+        var slips = Math.max(0, Math.min(TEXT_FIELD_CAP, Math.round(Number(slipsPerDay) || 0)));
+        slider.value = slipsToSliderPos(slips);
+        number.value = String(slips);
+        animateTo(compute(slips), duration);
       }
 
-      slider.addEventListener('input', function () { update(slider.value, 200); });
-      number.addEventListener('input', function () { update(number.value, 200); });
+      slider.addEventListener('input', function () {
+        var slips = sliderPosToSlips(Number(slider.value));
+        number.value = String(slips);
+        animateTo(compute(slips), 120);
+      });
+
+      number.addEventListener('input', function () {
+        var digitsOnly = number.value.replace(/[^0-9]/g, '');
+        if (digitsOnly !== number.value) number.value = digitsOnly;
+        var slips = Math.min(TEXT_FIELD_CAP, Number(digitsOnly) || 0);
+        slider.value = slipsToSliderPos(slips);
+        animateTo(compute(slips), 200);
+      });
+
+      // sync slider's starting position to the default typed value
+      slider.value = slipsToSliderPos(Number(number.value) || 0);
 
       var section = document.querySelector('.calculator');
       var started = false;
@@ -761,13 +821,13 @@ Enjoy your coffee!</div>
           entries.forEach(function (entry) {
             if (entry.isIntersecting && !started) {
               started = true;
-              update(slider.value, 1200);
+              setSlips(number.value, 1200);
             }
           });
         }, { threshold: 0.4 });
         observer.observe(section);
       } else {
-        update(slider.value, 0);
+        setSlips(number.value, 0);
       }
     })();
   </script>
