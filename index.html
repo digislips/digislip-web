@@ -472,8 +472,8 @@
       width: 100%;
       -webkit-appearance: none;
       appearance: none;
-      height: 4px;
-      border-radius: 2px;
+      height: 8px;
+      border-radius: 4px;
       background: #2C2825;
       margin-bottom: 24px;
       cursor: pointer;
@@ -481,56 +481,57 @@
     .calc-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 16px; height: 16px;
+      width: 26px; height: 26px;
       border-radius: 50%;
       background: var(--green);
-      border: 2px solid #0D1F14;
+      border: 3px solid #0D1F14;
       cursor: pointer;
     }
     .calc-slider::-moz-range-thumb {
-      width: 16px; height: 16px;
+      width: 26px; height: 26px;
       border-radius: 50%;
       background: var(--green);
-      border: 2px solid #0D1F14;
+      border: 3px solid #0D1F14;
       cursor: pointer;
     }
 
     .calc-results {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 16px;
     }
     @media (max-width: 480px) {
       .calc-results { grid-template-columns: 1fr; }
+      .calc-value { font-size: 30px; }
     }
 
     .calc-stat {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 10px;
-      padding: 16px 14px;
+      padding: 20px 12px;
       text-align: center;
       min-width: 0;
     }
-    .calc-stat .feature-icon { display: flex; justify-content: center; margin-bottom: 8px; }
+    .calc-stat .feature-icon { display: flex; justify-content: center; margin-bottom: 10px; }
     .calc-value {
       font-family: 'Syne', sans-serif;
       font-weight: 800;
-      font-size: clamp(16px, 4.4vw, 21px);
+      font-size: 23px;
       color: #F5F5F0;
       line-height: 1;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .calc-label {
-      font-size: 10px;
+      font-size: 11px;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #78716C;
+      color: #A8A29E;
     }
 
     .calc-footnote {
@@ -634,15 +635,15 @@ Enjoy your coffee!</div>
 
       <div class="calc-wow">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-        <span>South Africa prints an estimated <strong>9.8 billion</strong> till slips every year <em>(estimate)</em>. See what your store alone could save below.</span>
+        <span>South African retailers print an enormous volume of till slips every year. See what your store alone could save below.</span>
       </div>
 
       <div class="calculator">
         <div class="calc-slider-row">
           <label for="slipsSlider" class="calc-slider-label">Average till slips per day</label>
-          <input type="text" id="slipsNumber" class="calc-number" inputmode="numeric" pattern="[0-9]*" value="200" aria-label="Till slips per day">
+          <input type="text" id="slipsNumber" class="calc-number" inputmode="numeric" pattern="[0-9]*" value="50" aria-label="Till slips per day">
         </div>
-        <input type="range" id="slipsSlider" class="calc-slider" min="0" max="1000" step="1" value="460" aria-label="Till slips per day slider (logarithmic)">
+        <input type="range" id="slipsSlider" class="calc-slider" min="0" max="1000" step="1" value="283" aria-label="Till slips per day slider (logarithmic)">
 
         <div class="calc-results">
           <div class="calc-stat">
@@ -662,7 +663,12 @@ Enjoy your coffee!</div>
           </div>
         </div>
 
-        <p class="calc-footnote">Estimate assumes a 20cm average till slip on a 57mm × 40m thermal roll (~125g, ~R5/roll) and ~24 trees per ton of paper (~38kg/tree). For illustration only, not an audited figure.</p>
+        <p class="calc-footnote">Estimate assumes a 20cm average till slip on an 80mm × 75m thermal roll (~50g, ~R15/roll) and ~4,000 rolls per tree (200kg of usable pulp per tree ÷ 0.05kg of paper per roll). For illustration only, not an audited figure.</p>
+      </div>
+
+      <div class="calc-wow">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z"/><path d="M12 22v-3"/></svg>
+        <span>The national impact: if South Africa prints an estimated <strong>7 billion</strong> slips a year, that's roughly <strong>23 million</strong> rolls annually. Supplying that requires cutting down an estimated <strong>20,000 trees</strong> every year, just for cash registers.</span>
       </div>
 
       <a href="mailto:support.digislips@gmail.com" class="btn-dark">Get in touch →</a>
@@ -698,10 +704,10 @@ Enjoy your coffee!</div>
   <script>
     (function () {
       var SLIP_LENGTH_CM = 20;
-      var ROLL_LENGTH_CM = 4000;
-      var ROLL_WEIGHT_G = 125;
-      var ROLL_COST_R = 5;
-      var KG_PER_TREE = 38;
+      var ROLL_LENGTH_CM = 7500;
+      var ROLL_WEIGHT_G = 50;
+      var ROLL_COST_R = 15;
+      var KG_PER_TREE = 200;
 
       var slipsPerRoll = ROLL_LENGTH_CM / SLIP_LENGTH_CM;
       var weightPerSlipG = ROLL_WEIGHT_G / slipsPerRoll;
