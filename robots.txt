@@ -2,5 +2,6 @@ User-agent: *
 Disallow: /slip/
 Disallow: /confirm
 Disallow: /reset
+Disallow: /merchant/
 
 Sitemap: https://digislips.co.za/sitemap.xml

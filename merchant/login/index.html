@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#1558FF">
+  <title>DigiSlips — Merchant login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --page:     #E8E4DA;
+      --card:     #FEFDFB;
+      --text:     #1C1917;
+      --muted:    #78716C;
+      --faint:    #D6D3CD;
+      --blue:     #1558FF;
+      --green:    #00C96A;
+      --red:      #DC2626;
+      --red-lt:   #FEF2F2;
+      --red-bd:   #FECACA;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--page);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px 64px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
+    }
+
+    a.wordmark {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 32px;
+      letter-spacing: -1px;
+      text-decoration: none;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.45s ease forwards;
+    }
+    .wordmark .d { color: var(--blue); }
+    .wordmark .s { color: var(--green); }
+
+    .card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      border: 1px solid var(--faint);
+      border-radius: 16px;
+      padding: 36px 28px 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.09);
+      opacity: 0;
+      animation: fadeUp 0.45s 0.1s ease forwards;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    p.subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--page);
+      border: 1px solid var(--faint);
+      border-radius: 10px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--blue); }
+
+    .error-msg {
+      display: none;
+      background: var(--red-lt);
+      border: 1px solid var(--red-bd);
+      color: var(--red);
+      font-size: 12px;
+      line-height: 1.6;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+    }
+    .error-msg.show { display: block; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      background: var(--blue);
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .forgot {
+      display: block;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      margin-top: 20px;
+    }
+    .forgot:hover { color: var(--blue); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="/" class="wordmark"><span class="d">digi</span><span class="s">slips</span></a>
+
+  <div class="card">
+    <h1>Merchant login</h1>
+    <p class="subtitle">Sign in to manage your promotions.</p>
+
+    <div class="error-msg" id="error-msg" role="alert"></div>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn" id="submit-btn">Sign in</button>
+    </form>
+
+    <a href="/merchant/reset" class="forgot">Forgot password?</a>
+  </div>
+
+  <script src="/vendor/supabase-js-2.110.7.min.js"></script>
+  <script>
+    (function () {
+      var SUPABASE_URL  = "https://eivctqjisodfhaitzyiq.supabase.co"
+      var SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpdmN0cWppc29kZmhhaXR6eWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDgxMjIsImV4cCI6MjA5MjM4NDEyMn0._0wu91Zrc3aMrKsO_KUkp64CoOCklwMViYAofYZyCFI"
+
+      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+      var form      = document.getElementById('login-form')
+      var errorMsg  = document.getElementById('error-msg')
+      var submitBtn = document.getElementById('submit-btn')
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault()
+
+        errorMsg.classList.remove('show')
+        errorMsg.textContent = ''
+        submitBtn.disabled = true
+        submitBtn.textContent = 'Signing in…'
+
+        var email    = document.getElementById('email').value.trim()
+        var password = document.getElementById('password').value
+
+        client.auth.signInWithPassword({ email: email, password: password }).then(function (result) {
+          if (result.error) {
+            errorMsg.textContent = 'Invalid email or password.'
+            errorMsg.classList.add('show')
+            submitBtn.disabled = false
+            submitBtn.textContent = 'Sign in'
+            return
+          }
+
+          window.location.href = '/merchant'
+        })
+      })
+    })()
+  </script>
+
+</body>
+</html>

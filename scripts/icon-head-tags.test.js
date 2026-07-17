@@ -8,6 +8,7 @@ const PAGES = [
   'privacy/index.html',
   'confirm/index.html',
   'reset/index.html',
+  'merchant/login/index.html',
 ];
 
 describe('iconHeadTags', () => {

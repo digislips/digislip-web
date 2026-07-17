@@ -25,7 +25,7 @@ Static HTML/JS for the DigiSlip web surfaces, hosted on Vercel at `digislips.co.
 
 ## Security Policy — No CDN
 
-**All third-party JS must live in `vendor/` and be loaded locally.** No CDN `<script src>` tags are permitted. This policy was set May 2026 to prevent supply-chain risk on a page that handles receipt data. Applies to html2canvas, jsPDF, and any future library including bwip-js.
+**All third-party JS must live in `vendor/` and be loaded locally.** No CDN `<script src>` tags are permitted. This policy was set May 2026 to prevent supply-chain risk on a page that handles receipt data. Applies to html2canvas, jsPDF, bwip-js, and `supabase-js` (added July 2026 for the merchant dashboard — see "Merchant Dashboard" below).
 
 ---
 
@@ -42,6 +42,8 @@ Static HTML/JS for the DigiSlip web surfaces, hosted on Vercel at `digislips.co.
 | `.well-known/assetlinks.json` | Android App Links verification — contains both SHA-256 fingerprints: EAS upload key (`C9:0A:...`) and Google Play app-signing key (`B9:4E:...`) |
 | `favicon.ico`, `favicon-*.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | Site icon set — see "Site Icons / Favicon" below |
 | `scripts/generate-icons.js` | Regenerates the icon set from `digislip-app` source assets |
+| `sitemap.xml`, `robots.txt` | SEO — see "Sitemap / robots.txt" below |
+| `merchant/login/index.html` | Merchant dashboard sign-in (Supabase Auth email/password) — see "Merchant Dashboard" below |
 | `CLAUDE.md` | Agent instructions for this repo |
 
 ---
@@ -102,6 +104,16 @@ Added July 2026 (previously no favicon — browsers showed the default globe). T
 
 ---
 
+## Sitemap / robots.txt
+
+Added July 2026 for Google discoverability. Both are static root files, no `vercel.json` change needed.
+
+- **`sitemap.xml`** lists only `https://digislips.co.za/` and `/privacy`. Deliberately excludes `/slip/:id` (private, per-customer, one page per receipt — not indexable content) and `/confirm`, `/reset` (auth-flow pages).
+- **`robots.txt`** disallows `/slip/`, `/confirm`, `/reset` and points `Sitemap:` at the apex URL.
+- **Google Search Console gotcha:** the site's canonical domain is the apex (`digislips.co.za`); `www` 307-redirects to it (see the Vercel config note above). Search Console does not follow redirects when fetching a submitted sitemap — a sitemap submitted under a `www.digislips.co.za` property will permanently show "Couldn't fetch." The working setup is a **Domain-type property** for bare `digislips.co.za` (DNS TXT verification via Cloudflare), with the sitemap submitted there. Verified working July 2026 (status: Success, 2 pages discovered).
+
+---
+
 ## Supabase Integration
 
 The web page calls two Edge Functions directly:
@@ -142,3 +154,30 @@ Web-specific issues:
 - **Barcode section** renders below receipt text; `#pdf-target` mirrors it.
 - **Logo renders as `<img>`** at the top of the card above receipt text; the `src` is the Supabase Storage public URL (no auth needed — bucket is public).
 - **Graceful degradation:** if `parsed_content` is null, render receipt text only, no error. If `logo_url` is null, no logo section, no broken image placeholder.
+
+---
+
+## Merchant Dashboard
+
+PRD: [digislips/digislip-web#9](https://github.com/digislips/digislip-web/issues/9)
+
+A `/merchant/*` section where merchants self-serve their own stamp-card/coupon promotions instead of requiring a manual DB insert. New section, first page shipped July 2026:
+
+| Issue | Title | Blocked by |
+|-------|-------|------------|
+| [web#10](https://github.com/digislips/digislip-web/issues/10) | Merchant login page | none — shipped |
+| web#11 | Merchant password reset page | not yet built |
+| web#12 | Dashboard promotions list | not yet built |
+| web#13 | `promo-preview` module | not yet built |
+| web#14 | Create-promotion form + preview wiring | not yet built |
+| web#15 | Wire create-promotion submit | not yet built |
+| web#16 | Deactivate-promotion toggle | not yet built |
+
+### Key design decisions
+
+- **Anon key exception, scoped to `/merchant/*` only.** The repo's blanket "no Supabase anon key in web source" rule (set May 2026, see Security Policy above) does not apply here — `merchant/login/index.html` loads `supabase-js` and the anon key directly to drive Supabase Auth (`signInWithPassword`). Public pages (`index`, `slip`, `confirm`, `reset`) are unaffected and continue to go through Edge Functions only, with no anon key or Data API access.
+- **`supabase-js` is vendored**, not CDN-loaded, per the repo's no-CDN policy — `vendor/supabase-js-2.110.7.min.js` (UMD build).
+- **Generic auth errors:** login failures always show "Invalid email or password" regardless of whether the account exists or the password is wrong, to avoid account enumeration.
+- **No public self-signup.** Merchant accounts are provisioned by DigiSlips staff (`merchants.owner_user_id` set manually after device install) who then send a Supabase invite/magic link. `merchant/login` is sign-in only.
+- **Route layout:** one folder per page, matching the existing `slip/`, `confirm/`, `reset/` convention — `merchant/login/`, `merchant/reset/` (pending), `merchant/index.html` (dashboard, pending), `merchant/new/` (pending).
+- **`robots.txt`** disallows `/merchant/` — private, authenticated tool, not indexable.
