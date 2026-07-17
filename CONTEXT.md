@@ -40,6 +40,8 @@ Static HTML/JS for the DigiSlip web surfaces, hosted on Vercel at `digislips.co.
 | `index.html` | Root marketing/landing page — hero, how-it-works, merchants pitch (incl. paper-savings calculator) |
 | `vendor/` | Bundled third-party JS (html2canvas, jsPDF) |
 | `.well-known/assetlinks.json` | Android App Links verification — contains both SHA-256 fingerprints: EAS upload key (`C9:0A:...`) and Google Play app-signing key (`B9:4E:...`) |
+| `favicon.ico`, `favicon-*.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | Site icon set — see "Site Icons / Favicon" below |
+| `scripts/generate-icons.js` | Regenerates the icon set from `digislip-app` source assets |
 | `CLAUDE.md` | Agent instructions for this repo |
 
 ---
@@ -83,6 +85,20 @@ Merchant drags a slider (or types into the paired text field) for "average till 
 - **Logarithmic slider** (0–1,000,000 slips/day) — a linear slider can't usefully cover both a small café (tens/day) and a large chain (hundreds of thousands/day); log scale gives small stores drag precision without capping the top end.
 - **Plain text input, not `type="number"`** — avoids the native spinner; accepts typed values beyond the slider's own range as an escape hatch for stress-testing/"wow" numbers.
 - **Compact notation (K/M/B) kicks in early** (~1,000 for trees, ~10,000 for kg/rand), with values truncating to an ellipsis (full precision in a `title` tooltip) as a last-resort safety net. CSS Grid's default `min-width: auto` otherwise lets one overflowing card steal width from its siblings and break the 3-column layout — cards are pinned to `min-width: 0` and the font sized to fit realistic values without truncation.
+
+---
+
+## Site Icons / Favicon
+
+Added July 2026 (previously no favicon — browsers showed the default globe). The site had no logo image asset of its own, so the icon set is **derived from `digislip-app`'s real brand assets** rather than newly designed:
+
+- **Source of truth:** `../digislip-app/assets/images/icon.png` (1024×1024 detailed receipt-on-gradient, the actual Expo app icon) and `../digislip-app/assets/images/android-icon-monochrome.png` (receipt silhouette only, Android's themed-icon layer). `digislip-app` is a sibling repo on disk, not a dependency of this repo — these paths only matter when re-running the generator.
+- **Small sizes** (favicon 16/32/48, `.ico`): the monochrome silhouette composited onto a hand-authored blue→green gradient square (matches the app icon's gradient, `#1558FF` → `#00C96A`), so it stays legible at browser-tab size.
+- **Large sizes** (apple-touch-icon 180, `icon-192`/`icon-512`, manifest): the full detailed `icon.png`, resized.
+- **Cropping:** both source assets bake in Android's adaptive-icon safe-zone padding — the receipt only occupies the middle ~52% of the 1024px canvas. `scripts/generate-icons.js` crops to the receipt's bounding box (`RECEIPT_CROP`, ~30% padding) before resizing, otherwise the icon reads as mostly empty gradient with a small receipt floating in the middle.
+- **`favicon.ico` is hand-built**, not via a library — `png-to-ico` is ESM-only and breaks under Jest's CJS runtime, so `buildIco()` writes the (simple) modern PNG-in-ICO container format directly.
+- **No `favicon.svg`** — there's no vector source for the receipt shape, so a hand-authored SVG would just wrap a raster PNG with no real crispness gain over the `.ico`/PNG set.
+- **Regenerating:** `generateIconSet()` and `buildManifest()` are pure/testable (see `scripts/generate-icons.test.js`), but actually producing the files requires a one-off script pointing at the sibling `digislip-app` checkout — there's no committed runner because the source path is machine-specific. Re-derive it from `generateIconSet`'s signature if the art changes.
 
 ---
 
