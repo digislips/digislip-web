@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#1558FF">
+  <title>DigiSlips — Merchant dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --page:      #E8E4DA;
+      --card:      #FEFDFB;
+      --text:      #1C1917;
+      --muted:     #78716C;
+      --faint:     #D6D3CD;
+      --blue:      #1558FF;
+      --green:     #00C96A;
+      --green-lt:  #ECFDF5;
+      --green-bd:  #A7F3D0;
+      --green-dk:  #059669;
+      --red:       #DC2626;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--page);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+      min-height: 100vh;
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
+      padding: 32px 16px 64px;
+    }
+
+    .page { max-width: 760px; margin: 0 auto; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    a.wordmark {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -1px;
+      text-decoration: none;
+    }
+    .wordmark .d { color: var(--blue); }
+    .wordmark .s { color: var(--green); }
+    .signout {
+      font-size: 12px;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      text-decoration: underline;
+    }
+    .signout:hover { color: var(--blue); }
+
+    .header-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    p.subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .btn {
+      display: inline-block;
+      background: var(--blue);
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 13px;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.88; }
+
+    .status-panel {
+      background: var(--card);
+      border: 1px dashed var(--faint);
+      border-radius: 14px;
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .status-panel.error { color: var(--red); }
+    .status-panel .btn { margin-top: 16px; }
+
+    .promo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .promo-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--faint);
+      border-radius: 14px;
+      padding: 16px 20px;
+    }
+    .promo-row-main { flex: 1; min-width: 0; }
+    .promo-row-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .promo-row-meta {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .promo-row-type {
+      font-weight: 500;
+      color: var(--text);
+    }
+    .promo-row-side {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .state-pill {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .state-pill.active {
+      background: var(--green-lt);
+      color: var(--green-dk);
+      border: 1px solid var(--green-bd);
+    }
+    .state-pill.inactive {
+      background: var(--page);
+      color: var(--muted);
+      border: 1px solid var(--faint);
+    }
+    .promo-row-expiry {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page">
+    <div class="topbar">
+      <a href="/" class="wordmark"><span class="d">digi</span><span class="s">Slips</span></a>
+      <button type="button" class="signout" id="signout-btn">Sign out</button>
+    </div>
+
+    <div class="header-row">
+      <div>
+        <h1>Your promotions</h1>
+        <p class="subtitle">Stamp cards and coupons your customers can claim.</p>
+      </div>
+      <a href="/merchant/new" class="btn">Create promotion</a>
+    </div>
+
+    <div id="content">
+      <div class="status-panel" id="loading-panel">Loading your promotions…</div>
+    </div>
+  </div>
+
+  <script src="/vendor/supabase-js-2.110.7.min.js"></script>
+  <script src="/merchant/promotions-list-logic.js"></script>
+  <script>
+    (function () {
+      var SUPABASE_URL  = "https://eivctqjisodfhaitzyiq.supabase.co"
+      var SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpdmN0cWppc29kZmhhaXR6eWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDgxMjIsImV4cCI6MjA5MjM4NDEyMn0._0wu91Zrc3aMrKsO_KUkp64CoOCklwMViYAofYZyCFI"
+      var FUNCTIONS_URL = "https://eivctqjisodfhaitzyiq.supabase.co/functions/v1"
+
+      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+      var content = document.getElementById('content')
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        })
+      }
+
+      function renderEmpty() {
+        content.innerHTML =
+          '<div class="status-panel" id="empty-panel">' +
+            'No promotions yet.<br>Create your first stamp card or coupon to get started.' +
+            '<div><a href="/merchant/new" class="btn">Create promotion</a></div>' +
+          '</div>'
+      }
+
+      function renderError() {
+        content.innerHTML =
+          '<div class="status-panel error" id="error-panel">Could not load your promotions. Refresh to try again.</div>'
+      }
+
+      function renderList(promotions) {
+        var rows = promotions.map(function (promo) {
+          var state = promo.active ? 'active' : 'inactive'
+          return '' +
+            '<div class="promo-row">' +
+              '<div class="promo-row-main">' +
+                '<div class="promo-row-title">' + escapeHtml(promo.title || 'Untitled promotion') + '</div>' +
+                '<div class="promo-row-meta">' +
+                  '<span class="promo-row-type">' + escapeHtml(typeLabel(promo.type)) + '</span>' +
+                  ' · ' + escapeHtml(formatPromotionSummary(promo)) +
+                '</div>' +
+              '</div>' +
+              '<div class="promo-row-side">' +
+                '<span class="state-pill ' + state + '">' + escapeHtml(formatStateLabel(promo.active)) + '</span>' +
+                '<span class="promo-row-expiry">' + escapeHtml(formatExpiryLabel(promo.expires_at)) + '</span>' +
+              '</div>' +
+            '</div>'
+        }).join('')
+
+        content.innerHTML = '<div class="promo-list" id="promo-list">' + rows + '</div>'
+      }
+
+      // --- sign out ---
+      document.body.addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'signout-btn') {
+          client.auth.signOut().then(function () {
+            window.location.href = '/merchant/login'
+          })
+        }
+      })
+
+      // --- load promotions ---
+      client.auth.getSession().then(function (result) {
+        var session = result.data && result.data.session
+        if (!session) {
+          window.location.href = '/merchant/login'
+          return null
+        }
+        return fetch(FUNCTIONS_URL + '/list-merchant-promotions', {
+          headers: { Authorization: 'Bearer ' + session.access_token }
+        })
+      }).then(function (response) {
+        if (!response) return null
+        if (response.status === 401 || response.status === 403) {
+          window.location.href = '/merchant/login'
+          return null
+        }
+        if (!response.ok) throw new Error('REQUEST_FAILED')
+        return response.json()
+      }).then(function (body) {
+        if (!body) return
+        var promotions = body.promotions || []
+        if (promotions.length === 0) {
+          renderEmpty()
+        } else {
+          renderList(promotions)
+        }
+      }).catch(function () {
+        renderError()
+      })
+    })()
+  </script>
+
+</body>
+</html>
