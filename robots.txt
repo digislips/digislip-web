@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /slip/
+Disallow: /confirm
+Disallow: /reset
+
+Sitemap: https://digislips.co.za/sitemap.xml
