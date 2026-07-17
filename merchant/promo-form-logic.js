@@ -22,7 +22,7 @@ function validatePromotionForm(values) {
   if (PROMOTION_TYPES.indexOf(values.type) === -1) errors.type = 'Choose a promotion type.';
   if (isBlank(values.description)) errors.description = 'Describe how customers earn this.';
   if (isBlank(values.reward_description)) errors.reward_description = 'Describe the reward.';
-  if (isBlank(values.expires_at)) errors.expires_at = 'Set an expiry date.';
+  if (!values.never_expires && isBlank(values.expires_at)) errors.expires_at = 'Set an expiry date, or mark it as never expiring.';
 
   if (values.type === 'stamp_card') {
     var stamps = Number(values.stamps_required);

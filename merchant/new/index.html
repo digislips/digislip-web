@@ -140,6 +140,25 @@
     .field.has-error textarea { border-color: var(--red); }
     .field.has-error .field-error { display: block; }
 
+    .field label.checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 0;
+      font-size: 12px;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+      cursor: pointer;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      cursor: pointer;
+    }
+    .field input:disabled { opacity: 0.55; cursor: not-allowed; }
+
     .type-toggle {
       display: flex;
       gap: 8px;
@@ -365,6 +384,10 @@
         <div class="field" id="field-expires_at">
           <label for="expires_at">Expires</label>
           <input type="date" id="expires_at" name="expires_at">
+          <label class="checkbox-row" for="never_expires">
+            <input type="checkbox" id="never_expires" name="never_expires">
+            Never expires
+          </label>
           <div class="field-error"></div>
         </div>
 
@@ -412,6 +435,7 @@
         description:        document.getElementById('description'),
         rewardDescription:  document.getElementById('reward_description'),
         expiresAt:          document.getElementById('expires_at'),
+        neverExpires:       document.getElementById('never_expires'),
         claimCap:           document.getElementById('claim_cap'),
         cooldownHours:      document.getElementById('cooldown_hours'),
         fieldStampsRequired: document.getElementById('field-stamps_required'),
@@ -469,15 +493,24 @@
         el.addEventListener('input', renderPreview)
       })
 
+      // --- never expires: disables the date field and drops it from validation ---
+      els.neverExpires.addEventListener('change', function () {
+        els.expiresAt.disabled = els.neverExpires.checked
+        clearFieldError('expires_at')
+        renderPreview()
+      })
+
       // --- validation on submit ---
       function collectValues() {
+        var neverExpires = els.neverExpires.checked
         return {
           title: els.title.value,
           type: currentType,
           stamps_required: els.stampsRequired.value,
           description: els.description.value,
           reward_description: els.rewardDescription.value,
-          expires_at: els.expiresAt.value,
+          expires_at: neverExpires ? '' : els.expiresAt.value,
+          never_expires: neverExpires,
         }
       }
 

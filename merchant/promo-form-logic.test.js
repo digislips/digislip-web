@@ -80,6 +80,25 @@ describe('validatePromotionForm', () => {
     expect(result.errors.expires_at).toBeTruthy();
   });
 
+  test('missing expires_at is still an error when never_expires is explicitly false', () => {
+    const result = validatePromotionForm(stampCard({ expires_at: '', never_expires: false }));
+    expect(result.valid).toBe(false);
+    expect(result.errors.expires_at).toBeTruthy();
+  });
+
+  test('never_expires bypasses the expires_at requirement', () => {
+    const result = validatePromotionForm(stampCard({ expires_at: '', never_expires: true }));
+    expect(result.valid).toBe(true);
+    expect(result.errors.expires_at).toBeUndefined();
+  });
+
+  test('never_expires does not suppress other missing fields', () => {
+    const result = validatePromotionForm(stampCard({ expires_at: '', never_expires: true, title: '' }));
+    expect(result.valid).toBe(false);
+    expect(result.errors.title).toBeTruthy();
+    expect(result.errors.expires_at).toBeUndefined();
+  });
+
   test('stamp_card missing stamps_required', () => {
     const result = validatePromotionForm(stampCard({ stamps_required: '' }));
     expect(result.valid).toBe(false);
