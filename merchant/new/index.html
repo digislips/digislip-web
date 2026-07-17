@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#1558FF">
+  <title>DigiSlips — Create a promotion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --page:      #E8E4DA;
+      --card:      #FEFDFB;
+      --text:      #1C1917;
+      --muted:     #78716C;
+      --faint:     #D6D3CD;
+      --blue:      #1558FF;
+      --green:     #00C96A;
+      --green-lt:  #ECFDF5;
+      --green-bd:  #A7F3D0;
+      --green-dk:  #059669;
+      --red:       #DC2626;
+      --red-lt:    #FEF2F2;
+      --red-bd:    #FECACA;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--page);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+      min-height: 100vh;
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
+      padding: 32px 16px 64px;
+    }
+
+    .page { max-width: 1080px; margin: 0 auto; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    a.wordmark {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -1px;
+      text-decoration: none;
+    }
+    .wordmark .d { color: var(--blue); }
+    .wordmark .s { color: var(--green); }
+    .signout {
+      font-size: 12px;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      text-decoration: underline;
+    }
+    .signout:hover { color: var(--blue); }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    p.subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .preview-col { position: static !important; order: -1; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--faint);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.09);
+    }
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .field input,
+    .field textarea {
+      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--page);
+      border: 1px solid var(--faint);
+      border-radius: 10px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      resize: vertical;
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--blue); }
+    .field .hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    .field .field-error {
+      display: none;
+      font-size: 11px;
+      color: var(--red);
+      margin-top: 6px;
+    }
+    .field.has-error input,
+    .field.has-error textarea { border-color: var(--red); }
+    .field.has-error .field-error { display: block; }
+
+    .type-toggle {
+      display: flex;
+      gap: 8px;
+    }
+    .type-btn {
+      flex: 1;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 12px 14px;
+      border: 1px solid var(--faint);
+      background: var(--page);
+      color: var(--muted);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .type-btn.active {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: rgba(21,88,255,0.06);
+    }
+
+    details.advanced {
+      border: 1px solid var(--faint);
+      border-radius: 10px;
+      padding: 4px 14px;
+      margin-bottom: 24px;
+    }
+    details.advanced summary {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 10px 0;
+      list-style: none;
+    }
+    details.advanced summary::-webkit-details-marker { display: none; }
+    details.advanced summary::before { content: '▸ '; }
+    details.advanced[open] summary::before { content: '▾ '; }
+    details.advanced .field:last-child { margin-bottom: 14px; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      background: var(--blue);
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .submit-note {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+
+    /* --- preview column --- */
+    .preview-col { position: sticky; top: 24px; }
+    .preview-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .preview-status {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 20px;
+      text-align: center;
+      border: 1px dashed var(--faint);
+      border-radius: 14px;
+    }
+    .preview-status.error { color: var(--red); }
+
+    .promo-card {
+      background: var(--card);
+      border: 1px solid var(--faint);
+      border-left-width: 6px;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .promo-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+    }
+    .promo-tile {
+      flex-shrink: 0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      overflow: hidden;
+    }
+    .promo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .promo-header-text { flex: 1; min-width: 0; }
+    .promo-merchant-name {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .promo-title-line {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      line-height: 18px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .promo-body { padding: 16px; }
+    .stamp-grid { display: flex; flex-wrap: wrap; }
+    .stamp-dot { display: flex; align-items: center; justify-content: center; }
+    .stamp-dot.filled { background: var(--green); }
+    .stamp-dot.empty { background: var(--card); border: 1.5px dashed var(--faint); }
+    .stamp-footer {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 12px;
+      color: var(--text);
+      margin-top: 14px;
+    }
+    .coupon-body { padding: 14px; }
+    .coupon-offer-title {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .coupon-footer {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid var(--faint);
+      padding-top: 12px;
+    }
+    .coupon-meta { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .coupon-redeem-btn {
+      flex-shrink: 0;
+      background: var(--green-lt);
+      color: var(--green-dk);
+      border: 1px solid var(--green-bd);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 14px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page">
+    <div class="topbar">
+      <a href="/" class="wordmark"><span class="d">digi</span><span class="s">Slips</span></a>
+      <button type="button" class="signout" id="signout-btn">Sign out</button>
+    </div>
+
+    <h1>Create a promotion</h1>
+    <p class="subtitle">Fill in the details below. The preview on the right updates as you type, showing exactly what your customers will see.</p>
+
+    <div class="layout">
+      <div class="card">
+        <div class="field" id="field-title">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" placeholder="e.g. Coffee club">
+          <div class="field-error"></div>
+        </div>
+
+        <div class="field" id="field-type">
+          <label>Type</label>
+          <div class="type-toggle" role="group" aria-label="Promotion type">
+            <button type="button" class="type-btn active" data-type="stamp_card" aria-pressed="true">Stamp card</button>
+            <button type="button" class="type-btn" data-type="coupon" aria-pressed="false">Coupon</button>
+          </div>
+          <div class="field-error"></div>
+        </div>
+
+        <div class="field" id="field-stamps_required">
+          <label for="stamps_required">Stamps required</label>
+          <input type="number" id="stamps_required" name="stamps_required" min="1" step="1" placeholder="e.g. 8">
+          <div class="field-error"></div>
+        </div>
+
+        <div class="field" id="field-description">
+          <label for="description">How customers earn this</label>
+          <textarea id="description" name="description" rows="2" placeholder="e.g. Buy any coffee to earn a stamp."></textarea>
+          <div class="field-error"></div>
+        </div>
+
+        <div class="field" id="field-reward_description">
+          <label for="reward_description">Reward</label>
+          <textarea id="reward_description" name="reward_description" rows="2" placeholder="e.g. Free coffee"></textarea>
+          <div class="field-error"></div>
+        </div>
+
+        <div class="field" id="field-expires_at">
+          <label for="expires_at">Expires</label>
+          <input type="date" id="expires_at" name="expires_at">
+          <div class="field-error"></div>
+        </div>
+
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <div class="field">
+            <label for="claim_cap">Claim cap</label>
+            <input type="number" id="claim_cap" name="claim_cap" min="1" step="1" placeholder="Unlimited">
+            <div class="hint">How many times one customer can claim this promotion. Leave blank for unlimited.</div>
+          </div>
+          <div class="field">
+            <label for="cooldown_hours">Cooldown (hours)</label>
+            <input type="number" id="cooldown_hours" name="cooldown_hours" min="0" step="1">
+            <div class="hint">Minimum time between stamps for the same customer, to prevent abuse.</div>
+          </div>
+        </details>
+
+        <button type="button" class="btn" id="submit-btn">Create promotion</button>
+        <p class="submit-note" id="submit-note">Submitting isn't wired up yet — that's coming in a future update.</p>
+      </div>
+
+      <div class="preview-col">
+        <div class="preview-label">Live preview</div>
+        <div id="preview-mount">
+          <div class="preview-status" id="preview-loading">Loading your business details…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/supabase-js-2.110.7.min.js"></script>
+  <script src="/merchant/promo-form-logic.js"></script>
+  <script src="/merchant/promo-preview.js"></script>
+  <script>
+    (function () {
+      var SUPABASE_URL      = "https://eivctqjisodfhaitzyiq.supabase.co"
+      var SUPABASE_ANON     = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpdmN0cWppc29kZmhhaXR6eWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDgxMjIsImV4cCI6MjA5MjM4NDEyMn0._0wu91Zrc3aMrKsO_KUkp64CoOCklwMViYAofYZyCFI"
+      var FUNCTIONS_URL     = "https://eivctqjisodfhaitzyiq.supabase.co/functions/v1"
+
+      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+      var els = {
+        title:              document.getElementById('title'),
+        stampsRequired:     document.getElementById('stamps_required'),
+        description:        document.getElementById('description'),
+        rewardDescription:  document.getElementById('reward_description'),
+        expiresAt:          document.getElementById('expires_at'),
+        claimCap:           document.getElementById('claim_cap'),
+        cooldownHours:      document.getElementById('cooldown_hours'),
+        fieldStampsRequired: document.getElementById('field-stamps_required'),
+        previewMount:       document.getElementById('preview-mount'),
+        submitBtn:          document.getElementById('submit-btn'),
+        submitNote:         document.getElementById('submit-note'),
+        signoutBtn:         document.getElementById('signout-btn'),
+      }
+
+      var typeButtons = Array.prototype.slice.call(document.querySelectorAll('.type-btn'))
+      var currentType = 'stamp_card'
+      var advancedTouched = { claim_cap: false, cooldown_hours: false }
+      var merchant = { name: '', logo_url: null }
+      var merchantLoaded = false
+
+      applyDefaults(currentType)
+      toggleStampsRequiredVisibility()
+
+      // --- type toggle ---
+      typeButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (btn.dataset.type === currentType) return
+          currentType = btn.dataset.type
+          typeButtons.forEach(function (b) {
+            var isActive = b === btn
+            b.classList.toggle('active', isActive)
+            b.setAttribute('aria-pressed', isActive ? 'true' : 'false')
+          })
+          toggleStampsRequiredVisibility()
+          applyDefaults(currentType)
+          clearFieldError('type')
+          renderPreview()
+        })
+      })
+
+      function toggleStampsRequiredVisibility() {
+        els.fieldStampsRequired.style.display = currentType === 'stamp_card' ? 'block' : 'none'
+      }
+
+      function applyDefaults(type) {
+        var defaults = defaultsForType(type)
+        if (!advancedTouched.claim_cap) {
+          els.claimCap.value = defaults.claim_cap === null ? '' : defaults.claim_cap
+        }
+        if (!advancedTouched.cooldown_hours) {
+          els.cooldownHours.value = defaults.cooldown_hours
+        }
+      }
+
+      els.claimCap.addEventListener('input', function () { advancedTouched.claim_cap = true })
+      els.cooldownHours.addEventListener('input', function () { advancedTouched.cooldown_hours = true })
+
+      // --- live preview: only fields that actually change the rendered card ---
+      ;[els.title, els.stampsRequired, els.rewardDescription, els.expiresAt].forEach(function (el) {
+        el.addEventListener('input', renderPreview)
+      })
+
+      // --- validation on submit ---
+      function collectValues() {
+        return {
+          title: els.title.value,
+          type: currentType,
+          stamps_required: els.stampsRequired.value,
+          description: els.description.value,
+          reward_description: els.rewardDescription.value,
+          expires_at: els.expiresAt.value,
+        }
+      }
+
+      function clearFieldError(name) {
+        var field = document.getElementById('field-' + name)
+        if (!field) return
+        field.classList.remove('has-error')
+        var msg = field.querySelector('.field-error')
+        if (msg) msg.textContent = ''
+      }
+
+      function showErrors(errors) {
+        ;['title', 'type', 'stamps_required', 'description', 'reward_description', 'expires_at'].forEach(function (name) {
+          var field = document.getElementById('field-' + name)
+          if (!field) return
+          if (errors[name]) {
+            field.classList.add('has-error')
+            field.querySelector('.field-error').textContent = errors[name]
+          } else {
+            field.classList.remove('has-error')
+            field.querySelector('.field-error').textContent = ''
+          }
+        })
+      }
+
+      els.submitBtn.addEventListener('click', function () {
+        var result = validatePromotionForm(collectValues())
+        showErrors(result.errors)
+
+        if (!result.valid) {
+          els.submitNote.textContent = 'Fix the highlighted fields to continue.'
+          return
+        }
+
+        els.submitNote.textContent = "Looks good — submitting isn't wired up yet. That's coming in a future update."
+      })
+
+      // --- preview rendering ---
+      function renderPreview() {
+        if (!merchantLoaded) return
+
+        var values = collectValues()
+        var accent = merchantColor(merchant.name || '?')
+
+        var html
+        if (currentType === 'coupon') {
+          html = renderCouponPreview(values, accent)
+        } else {
+          html = renderStampPreview(values, accent)
+        }
+        els.previewMount.innerHTML = html
+
+        if (currentType !== 'coupon') sizeStampGrid(values)
+      }
+
+      function merchantTileHtml(size, initialSize, accent) {
+        if (merchant.logo_url) {
+          return '<div class="promo-tile" style="width:' + size + 'px;height:' + size + 'px;">' +
+            '<img src="' + escapeAttr(merchant.logo_url) + '" alt="">' +
+            '</div>'
+        }
+        var trimmedName = (merchant.name || '').trim()
+        var initial = trimmedName ? trimmedName.charAt(0).toUpperCase() : '?'
+        return '<div class="promo-tile" style="width:' + size + 'px;height:' + size + 'px;background:' + accent.text + ';color:var(--card);font-size:' + initialSize + 'px;">' +
+          escapeHtml(initial) + '</div>'
+      }
+
+      function renderStampPreview(values, accent) {
+        var stampsRequired = Math.max(parseInt(values.stamps_required, 10) || 0, 1)
+        var expiryLabel = values.expires_at ? formatExpiry(values.expires_at) : null
+        var titleLine = escapeHtml(values.title || 'Promotion title') + (expiryLabel ? ' · ' + escapeHtml(expiryLabel) : '')
+        var footer = formatStampFooter(0, stampsRequired, values.reward_description)
+
+        return '' +
+          '<div class="promo-card" style="border-left-color:' + accent.text + '">' +
+            '<div class="promo-header" style="background:' + accent.bg + '">' +
+              merchantTileHtml(40, 16, accent) +
+              '<div class="promo-header-text">' +
+                '<div class="promo-merchant-name">' + escapeHtml(merchant.name || 'Your business') + '</div>' +
+                '<div class="promo-title-line" style="color:' + accent.text + '">' + titleLine + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="promo-body">' +
+              '<div class="stamp-grid" id="stamp-grid" data-stamps-required="' + stampsRequired + '"></div>' +
+              '<div class="stamp-footer">' + escapeHtml(footer) + '</div>' +
+            '</div>' +
+          '</div>'
+      }
+
+      function renderCouponPreview(values, accent) {
+        var expiryLabel = values.expires_at ? formatExpiry(values.expires_at) : null
+        var meta = formatCouponFooter(values.reward_description)
+
+        return '' +
+          '<div class="promo-card" style="border-left-color:' + accent.text + '">' +
+            '<div class="promo-header" style="background:' + accent.bg + '">' +
+              merchantTileHtml(36, 15, accent) +
+              '<div class="promo-merchant-name" style="flex:1">' + escapeHtml(merchant.name || 'Your business') + '</div>' +
+              (expiryLabel ? '<div class="promo-title-line" style="color:' + accent.text + '">' + escapeHtml(expiryLabel) + '</div>' : '') +
+            '</div>' +
+            '<div class="coupon-body">' +
+              '<div class="coupon-offer-title">' + escapeHtml(values.title || 'Promotion title') + '</div>' +
+              '<div class="coupon-footer">' +
+                '<div class="coupon-meta">' + escapeHtml(meta) + '</div>' +
+                '<span class="coupon-redeem-btn">Redeem</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+      }
+
+      function sizeStampGrid(values) {
+        var grid = document.getElementById('stamp-grid')
+        if (!grid) return
+        var stampsRequired = parseInt(grid.dataset.stampsRequired, 10) || 1
+        var layout = computeStampLayout(grid.clientWidth, stampsRequired)
+
+        var dotsHtml = ''
+        for (var i = 0; i < stampsRequired; i++) {
+          dotsHtml += '<div class="stamp-dot empty" style="width:' + layout.stampSize + 'px;height:' + layout.stampSize + 'px;border-radius:' + (layout.stampSize / 2) + 'px;"></div>'
+        }
+        grid.innerHTML = dotsHtml
+        grid.style.gap = layout.stampGap + 'px'
+      }
+
+      window.addEventListener('resize', function () {
+        if (currentType !== 'coupon' && merchantLoaded) sizeStampGrid(collectValues())
+      })
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        })
+      }
+      function escapeAttr(str) { return escapeHtml(str) }
+
+      function showPreviewError() {
+        els.previewMount.innerHTML = '<div class="preview-status error">Could not load your business details. Refresh to try again.</div>'
+      }
+
+      // --- sign out ---
+      els.signoutBtn.addEventListener('click', function () {
+        client.auth.signOut().then(function () {
+          window.location.href = '/merchant/login'
+        })
+      })
+
+      // --- load merchant identity ---
+      client.auth.getSession().then(function (result) {
+        var session = result.data && result.data.session
+        if (!session) {
+          window.location.href = '/merchant/login'
+          return null
+        }
+        return fetch(FUNCTIONS_URL + '/list-merchant-promotions', {
+          headers: { Authorization: 'Bearer ' + session.access_token }
+        })
+      }).then(function (response) {
+        if (!response) return null
+        if (response.status === 401 || response.status === 403) {
+          window.location.href = '/merchant/login'
+          return null
+        }
+        if (!response.ok) throw new Error('REQUEST_FAILED')
+        return response.json()
+      }).then(function (body) {
+        if (!body) return
+        merchant = body.merchant || { name: '', logo_url: null }
+        merchantLoaded = true
+        renderPreview()
+      }).catch(function () {
+        showPreviewError()
+      })
+    })()
+  </script>
+
+</body>
+</html>
