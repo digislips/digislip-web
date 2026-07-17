@@ -121,6 +121,7 @@
     }
     .status-panel.error { color: var(--red); }
     .status-panel .btn { margin-top: 16px; }
+    .status-panel a { color: var(--blue); }
 
     .promo-list {
       display: flex;
@@ -243,6 +244,14 @@
           '<div class="status-panel error" id="error-panel">Could not load your promotions. Refresh to try again.</div>'
       }
 
+      function renderNotLinked() {
+        content.innerHTML =
+          '<div class="status-panel error" id="not-linked-panel">' +
+            "Your account isn't linked to a merchant yet.<br>" +
+            'Contact <a href="mailto:support.digislips@gmail.com">support.digislips@gmail.com</a> to get set up.' +
+          '</div>'
+      }
+
       function renderList(promotions) {
         var rows = promotions.map(function (promo) {
           var state = promo.active ? 'active' : 'inactive'
@@ -286,8 +295,12 @@
         })
       }).then(function (response) {
         if (!response) return null
-        if (response.status === 401 || response.status === 403) {
+        if (response.status === 401) {
           window.location.href = '/merchant/login'
+          return null
+        }
+        if (response.status === 403) {
+          renderNotLinked()
           return null
         }
         if (!response.ok) throw new Error('REQUEST_FAILED')

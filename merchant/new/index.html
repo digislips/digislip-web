@@ -617,6 +617,14 @@
         els.previewMount.innerHTML = '<div class="preview-status error">Could not load your business details. Refresh to try again.</div>'
       }
 
+      function showNotLinked() {
+        els.previewMount.innerHTML =
+          '<div class="preview-status error">' +
+            "Your account isn't linked to a merchant yet. " +
+            'Contact <a href="mailto:support.digislips@gmail.com" style="color:var(--blue)">support.digislips@gmail.com</a> to get set up.' +
+          '</div>'
+      }
+
       // --- sign out ---
       els.signoutBtn.addEventListener('click', function () {
         client.auth.signOut().then(function () {
@@ -636,8 +644,12 @@
         })
       }).then(function (response) {
         if (!response) return null
-        if (response.status === 401 || response.status === 403) {
+        if (response.status === 401) {
           window.location.href = '/merchant/login'
+          return null
+        }
+        if (response.status === 403) {
+          showNotLinked()
           return null
         }
         if (!response.ok) throw new Error('REQUEST_FAILED')
