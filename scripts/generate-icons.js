@@ -10,6 +10,12 @@ const LARGE_SIZES = [
 
 const SMALL_SIZES = [16, 32, 48];
 
+// Both source assets bake in Android's adaptive-icon safe-zone padding
+// (the receipt only fills ~52% of the 1024px canvas). Crop to the
+// receipt's bounding box plus ~30% breathing room so it actually fills
+// the square icon instead of floating in a sea of gradient.
+const RECEIPT_CROP = { left: 158, top: 146, width: 706, height: 706 };
+
 function buildManifest() {
   return {
     name: 'DigiSlips',
@@ -68,8 +74,9 @@ function buildIco(images) {
 }
 
 async function makeSmallFavicon(sourceMonochromePath, size) {
-  const glyphSize = Math.round(size * 0.9);
+  const glyphSize = Math.round(size * 0.92);
   const glyph = await sharp(sourceMonochromePath)
+    .extract(RECEIPT_CROP)
     .resize(glyphSize, glyphSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .tint('#FEFDFB')
     .toBuffer();
@@ -85,7 +92,7 @@ async function generateIconSet({ sourceIconPath, sourceMonochromePath, outDir })
 
   await Promise.all(
     LARGE_SIZES.map(({ file, size }) =>
-      sharp(sourceIconPath).resize(size, size).png().toFile(path.join(outDir, file))
+      sharp(sourceIconPath).extract(RECEIPT_CROP).resize(size, size).png().toFile(path.join(outDir, file))
     )
   );
 
