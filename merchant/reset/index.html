@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#1558FF">
+  <title>DigiSlips — Merchant password reset</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --page:     #E8E4DA;
+      --card:     #FEFDFB;
+      --text:     #1C1917;
+      --muted:    #78716C;
+      --faint:    #D6D3CD;
+      --blue:     #1558FF;
+      --green:    #00C96A;
+      --red:      #DC2626;
+      --red-lt:   #FEF2F2;
+      --red-bd:   #FECACA;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--page);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px 64px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
+    }
+
+    a.wordmark {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 32px;
+      letter-spacing: -1px;
+      text-decoration: none;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.45s ease forwards;
+    }
+    .wordmark .d { color: var(--blue); }
+    .wordmark .s { color: var(--green); }
+
+    .card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      border: 1px solid var(--faint);
+      border-radius: 16px;
+      padding: 36px 28px 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.09);
+      opacity: 0;
+      animation: fadeUp 0.45s 0.1s ease forwards;
+    }
+
+    .icon-disc {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .icon-disc.green  { background: #ECFDF5; border: 1.5px solid #A7F3D0; }
+    .icon-disc.red    { background: var(--red-lt);   border: 1.5px solid var(--red-bd); }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    p.subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--page);
+      border: 1px solid var(--faint);
+      border-radius: 10px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--blue); }
+
+    .error-msg {
+      display: none;
+      background: var(--red-lt);
+      border: 1px solid var(--red-bd);
+      color: var(--red);
+      font-size: 12px;
+      line-height: 1.6;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+    }
+    .error-msg.show { display: block; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      background: var(--blue);
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      text-align: center;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .back {
+      display: block;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      margin-top: 20px;
+    }
+    .back:hover { color: var(--blue); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="/" class="wordmark"><span class="d">digi</span><span class="s">slips</span></a>
+
+  <!-- request state: enter email to receive a reset link -->
+  <div class="card" id="card-request" style="display:none">
+    <h1>Reset your password</h1>
+    <p class="subtitle">Enter your email and we'll send you a link to set a new password.</p>
+
+    <div class="error-msg" id="request-error" role="alert"></div>
+
+    <form id="request-form" novalidate>
+      <div class="field">
+        <label for="request-email">Email</label>
+        <input type="email" id="request-email" name="email" autocomplete="username" required>
+      </div>
+      <button type="submit" class="btn" id="request-submit">Send reset link</button>
+    </form>
+
+    <a href="/merchant/login" class="back">Back to login</a>
+  </div>
+
+  <!-- request-sent confirmation -->
+  <div class="card" id="card-sent" style="display:none">
+    <div class="icon-disc green">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 2 11 13"/>
+        <path d="M22 2 15 22 11 13 2 9z"/>
+      </svg>
+    </div>
+    <h1>Check your email</h1>
+    <p class="subtitle">If an account exists for that address, we've sent a link to reset your password.</p>
+    <a href="/merchant/login" class="btn">Back to login</a>
+  </div>
+
+  <!-- recovery state: set a new password -->
+  <div class="card" id="card-recovery" style="display:none">
+    <h1>Set new password</h1>
+    <p class="subtitle">Choose a new password for your merchant account.</p>
+
+    <div class="error-msg" id="recovery-error" role="alert"></div>
+
+    <form id="recovery-form" novalidate>
+      <div class="field">
+        <label for="new-password">New password</label>
+        <input type="password" id="new-password" name="new-password" autocomplete="new-password" required>
+      </div>
+      <div class="field">
+        <label for="confirm-password">Confirm password</label>
+        <input type="password" id="confirm-password" name="confirm-password" autocomplete="new-password" required>
+      </div>
+      <button type="submit" class="btn" id="recovery-submit">Set password</button>
+    </form>
+  </div>
+
+  <!-- error state (expired/invalid link) -->
+  <div class="card" id="card-error" style="display:none">
+    <div class="icon-disc red">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <h1 id="error-title">Link expired.</h1>
+    <p class="subtitle" id="error-body">This password reset link has expired. Request a new one below.</p>
+    <a href="/merchant/reset" class="btn">Request new link</a>
+  </div>
+
+  <script src="/vendor/supabase-js-2.110.7.min.js"></script>
+  <script src="/merchant/reset-logic.js"></script>
+  <script>
+    (function () {
+      var SUPABASE_URL  = "https://eivctqjisodfhaitzyiq.supabase.co"
+      var SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpdmN0cWppc29kZmhhaXR6eWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDgxMjIsImV4cCI6MjA5MjM4NDEyMn0._0wu91Zrc3aMrKsO_KUkp64CoOCklwMViYAofYZyCFI"
+
+      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+      var cards = {
+        request:  document.getElementById('card-request'),
+        sent:     document.getElementById('card-sent'),
+        recovery: document.getElementById('card-recovery'),
+        error:    document.getElementById('card-error'),
+      }
+
+      function showCard(name) {
+        Object.keys(cards).forEach(function (key) {
+          cards[key].style.display = key === name ? 'block' : 'none'
+        })
+      }
+
+      var hash   = window.location.hash.slice(1)
+      var parsed = parseRecoveryHash(hash)
+
+      if (parsed.type === 'error') {
+        document.getElementById('error-title').textContent = parsed.title
+        document.getElementById('error-body').textContent  = parsed.body
+        showCard('error')
+        return
+      }
+
+      if (parsed.type === 'recovery') {
+        showCard('recovery')
+
+        var recoveryForm  = document.getElementById('recovery-form')
+        var recoveryError = document.getElementById('recovery-error')
+        var recoverySubmit = document.getElementById('recovery-submit')
+
+        recoveryForm.addEventListener('submit', function (e) {
+          e.preventDefault()
+
+          var password = document.getElementById('new-password').value
+          var confirm  = document.getElementById('confirm-password').value
+
+          var validation = validateNewPassword(password, confirm)
+          if (!validation.valid) {
+            recoveryError.textContent = validation.message
+            recoveryError.classList.add('show')
+            return
+          }
+
+          recoveryError.classList.remove('show')
+          recoveryError.textContent = ''
+          recoverySubmit.disabled = true
+          recoverySubmit.textContent = 'Setting password…'
+
+          client.auth.updateUser({ password: password }).then(function (result) {
+            if (result.error) {
+              recoveryError.textContent = result.error.message || 'Could not update your password. Please request a new link.'
+              recoveryError.classList.add('show')
+              recoverySubmit.disabled = false
+              recoverySubmit.textContent = 'Set password'
+              return
+            }
+
+            window.location.href = '/merchant/login'
+          })
+        })
+        return
+      }
+
+      // request state — no recovery token in the URL, show the "send me a link" form
+      showCard('request')
+
+      var requestForm   = document.getElementById('request-form')
+      var requestError  = document.getElementById('request-error')
+      var requestSubmit = document.getElementById('request-submit')
+
+      requestForm.addEventListener('submit', function (e) {
+        e.preventDefault()
+
+        requestError.classList.remove('show')
+        requestError.textContent = ''
+        requestSubmit.disabled = true
+        requestSubmit.textContent = 'Sending…'
+
+        var email = document.getElementById('request-email').value.trim()
+
+        client.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/merchant/reset',
+        }).then(function () {
+          showCard('sent')
+        })
+      })
+    })()
+  </script>
+
+</body>
+</html>

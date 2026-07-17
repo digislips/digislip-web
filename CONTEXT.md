@@ -44,6 +44,7 @@ Static HTML/JS for the DigiSlip web surfaces, hosted on Vercel at `digislips.co.
 | `scripts/generate-icons.js` | Regenerates the icon set from `digislip-app` source assets |
 | `sitemap.xml`, `robots.txt` | SEO — see "Sitemap / robots.txt" below |
 | `merchant/login/index.html` | Merchant dashboard sign-in (Supabase Auth email/password) — see "Merchant Dashboard" below |
+| `merchant/reset/index.html` | Merchant password reset (request + landing + set-new-password) — see "Merchant Dashboard" below |
 | `CLAUDE.md` | Agent instructions for this repo |
 
 ---
@@ -166,7 +167,7 @@ A `/merchant/*` section where merchants self-serve their own stamp-card/coupon p
 | Issue | Title | Blocked by |
 |-------|-------|------------|
 | [web#10](https://github.com/digislips/digislip-web/issues/10) | Merchant login page | none — shipped |
-| web#11 | Merchant password reset page | not yet built |
+| [web#11](https://github.com/digislips/digislip-web/issues/11) | Merchant password reset page | none — shipped |
 | web#12 | Dashboard promotions list | not yet built |
 | [web#13](https://github.com/digislips/digislip-web/issues/13) | `promo-preview` module | none — shipped (no UI consumer yet) |
 | web#14 | Create-promotion form + preview wiring | not yet built |
@@ -181,4 +182,7 @@ A `/merchant/*` section where merchants self-serve their own stamp-card/coupon p
 - **No public self-signup.** Merchant accounts are provisioned by DigiSlips staff (`merchants.owner_user_id` set manually after device install) who then send a Supabase invite/magic link. `merchant/login` is sign-in only.
 - **Route layout:** one folder per page, matching the existing `slip/`, `confirm/`, `reset/` convention — `merchant/login/`, `merchant/reset/` (pending), `merchant/index.html` (dashboard, pending), `merchant/new/` (pending).
 - **`robots.txt`** disallows `/merchant/` — private, authenticated tool, not indexable.
+- **`merchant/reset/index.html` is a single page covering the whole password-reset flow** (web#11), not just the post-email landing step: a "request" state (email field → `resetPasswordForEmail`) is shown when the URL has no recovery hash — this is what `merchant/login`'s "Forgot password?" link goes to — and a "recovery" state (new-password form → `updateUser`) is shown when Supabase's redirect lands with a `type=recovery` hash. This differs from the consumer `reset/index.html`, which only ever renders the landing step and hands off to the app via `digislip://` deep link — merchants have no app, so the actual `updateUser({ password })` call has to happen in the browser. On success, redirects to `merchant/login` (not the consumer's app deep link).
+- **`merchant/reset-logic.js`** is a colocated pure module (mirrors the `slip/slip-logic.js` convention) exposing `parseRecoveryHash` (mirrors the consumer page's inline `error`/`error_code`/`error_description` handling — same `otp_expired` vs. generic copy — to decide between the error/recovery/request states) and `validateNewPassword` (min 6 chars, must match confirm field). Tested in `merchant/reset-logic.test.js`.
+- **No account-enumeration leak on the request step** — `resetPasswordForEmail` always shows the same "check your email" confirmation regardless of whether the address has an account, consistent with the login page's generic-error precedent.
 - **`merchant/promo-preview.js` is a ported, DOM-free rendering-rules module** (web#13) — `merchantColor`, `computeStampLayout`, `formatExpiry`, `formatStampFooter`, `formatCouponFooter`, line-for-line ported from `digislip-app`'s `src/lib/merchant-color.ts`, `src/lib/stamp-layout.ts`, `src/lib/format-date.ts`, and the footer copy in `StampCard.tsx`/`CouponCard.tsx` (sibling repo, checked out alongside this one — not a dependency). Pure functions, plain data in/out, no DOM/React Native imports, so the merchant dashboard's live promo preview (web#14) can match the real app pixel-for-pixel instead of approximating it. `merchant/promo-preview.test.js` asserts `merchantColor` is byte-identical to the app's OKLCH output for a representative name set (including empty/short/unicode) by hardcoding hex values computed from the app's actual algorithm. Not wired into any page yet — colocated at `merchant/` root (not under a specific page folder) since no single page owns it until web#14, following the `slip/slip-logic.js` colocated-pure-module convention.
