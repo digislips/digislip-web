@@ -44,7 +44,7 @@ function buildPromoPayloadUrl(promotionId) {
 }
 
 function nfcPayloadExplainer() {
-  return 'Program this URL onto an NFC chip so customers can tap to claim this promotion.';
+  return 'Use this URL for an NFC chip or QR code so customers can tap or scan to claim this promotion.';
 }
 
 function copyButtonLabel(copied) {
