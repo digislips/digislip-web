@@ -201,27 +201,36 @@
       color: var(--muted);
     }
 
-    .row-actions { flex-shrink: 0; }
-    .toggle-btn {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      padding: 7px 14px;
-      border-radius: 8px;
+    .row-actions { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+    .switch {
+      position: relative;
+      flex-shrink: 0;
+      width: 42px;
+      height: 24px;
+      padding: 3px;
+      border: none;
+      border-radius: 999px;
+      background: var(--faint);
       cursor: pointer;
-      border: 1px solid var(--faint);
-      background: var(--page);
-      color: var(--text);
+      transition: background 0.15s;
+    }
+    .switch.on { background: var(--green); }
+    .switch:disabled { opacity: 0.55; cursor: not-allowed; }
+    .switch-knob {
+      display: block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+      transition: transform 0.15s;
+    }
+    .switch.on .switch-knob { transform: translateX(18px); }
+    .switch-label {
+      font-size: 11px;
+      color: var(--muted);
       white-space: nowrap;
     }
-    .toggle-btn:hover { border-color: var(--blue); color: var(--blue); }
-    .toggle-btn.reactivate {
-      border-color: var(--green-bd);
-      color: var(--green-dk);
-      background: var(--green-lt);
-    }
-    .toggle-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .confirm-box {
       flex-basis: 100%;
@@ -404,17 +413,17 @@
         var state = promo.active ? 'active' : 'inactive'
         var id = escapeHtml(promo.id)
 
-        var actionHtml
-        if (ui.state === 'saving') {
-          actionHtml = '<button type="button" class="toggle-btn" disabled>' +
-            (promo.active ? 'Deactivating…' : 'Reactivating…') + '</button>'
-        } else if (ui.state === 'confirm') {
-          actionHtml = '<button type="button" class="toggle-btn" data-action="toggle" data-id="' + id + '" disabled>' +
-            toggleActionLabel(promo.active) + '</button>'
-        } else {
-          actionHtml = '<button type="button" class="toggle-btn' + (promo.active ? '' : ' reactivate') +
-            '" data-action="toggle" data-id="' + id + '">' + toggleActionLabel(promo.active) + '</button>'
-        }
+        var switchDisabled = ui.state === 'confirm' || ui.state === 'saving'
+        var switchAriaLabel = escapeHtml(toggleActionLabel(promo.active) + ' ' + (promo.title || 'promotion'))
+        var actionHtml =
+          '<button type="button" class="switch' + (promo.active ? ' on' : '') + '" role="switch" aria-checked="' +
+            promo.active + '" aria-label="' + switchAriaLabel + '" data-action="toggle" data-id="' + id + '"' +
+            (switchDisabled ? ' disabled' : '') + '>' +
+            '<span class="switch-knob"></span>' +
+          '</button>' +
+          (ui.state === 'saving'
+            ? '<span class="switch-label">' + (promo.active ? 'Deactivating…' : 'Reactivating…') + '</span>'
+            : '')
 
         var confirmHtml = ''
         if (promo.active && (ui.state === 'confirm' || ui.state === 'saving')) {
