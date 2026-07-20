@@ -218,6 +218,7 @@
       transition: opacity 0.15s;
     }
     .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
     .submit-note {
       font-size: 11px;
       color: var(--muted);
@@ -225,6 +226,7 @@
       margin-top: 10px;
       line-height: 1.6;
     }
+    .submit-note.error { color: var(--red); }
 
     /* --- preview column --- */
     .preview-col { position: sticky; top: 24px; }
@@ -406,7 +408,7 @@
         </details>
 
         <button type="button" class="btn" id="submit-btn">Create promotion</button>
-        <p class="submit-note" id="submit-note">Submitting isn't wired up yet — that's coming in a future update.</p>
+        <p class="submit-note" id="submit-note"></p>
       </div>
 
       <div class="preview-col">
@@ -450,6 +452,7 @@
       var advancedTouched = { claim_cap: false, cooldown_hours: false }
       var merchant = { name: '', logo_url: null }
       var merchantLoaded = false
+      var submitting = false
 
       applyDefaults(currentType)
       toggleStampsRequiredVisibility()
@@ -511,6 +514,8 @@
           reward_description: els.rewardDescription.value,
           expires_at: neverExpires ? '' : els.expiresAt.value,
           never_expires: neverExpires,
+          claim_cap: els.claimCap.value,
+          cooldown_hours: els.cooldownHours.value,
         }
       }
 
@@ -536,16 +541,68 @@
         })
       }
 
+      function setSubmitNote(text, isError) {
+        els.submitNote.textContent = text
+        els.submitNote.classList.toggle('error', !!isError)
+      }
+
+      function setSubmitting(isSubmitting) {
+        submitting = isSubmitting
+        els.submitBtn.disabled = isSubmitting
+        els.submitBtn.textContent = isSubmitting ? 'Creating…' : 'Create promotion'
+      }
+
       els.submitBtn.addEventListener('click', function () {
+        if (submitting) return
+
         var result = validatePromotionForm(collectValues())
         showErrors(result.errors)
 
         if (!result.valid) {
-          els.submitNote.textContent = 'Fix the highlighted fields to continue.'
+          setSubmitNote('Fix the highlighted fields to continue.', true)
           return
         }
 
-        els.submitNote.textContent = "Looks good — submitting isn't wired up yet. That's coming in a future update."
+        setSubmitNote('', false)
+        setSubmitting(true)
+
+        client.auth.getSession().then(function (result) {
+          var session = result.data && result.data.session
+          if (!session) {
+            window.location.href = '/merchant/login'
+            return null
+          }
+          return fetch(FUNCTIONS_URL + '/create-promotion', {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer ' + session.access_token,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(buildCreatePromotionPayload(collectValues())),
+          })
+        }).then(function (response) {
+          if (!response) return null
+          if (response.status === 401) {
+            window.location.href = '/merchant/login'
+            return null
+          }
+          if (response.status === 201) {
+            window.location.href = '/merchant'
+            return null
+          }
+          return response.json().catch(function () { return {} }).then(function (body) {
+            return Promise.reject({ status: response.status, body: body })
+          })
+        }).catch(function (err) {
+          setSubmitting(false)
+          if (err && err.status === 403) {
+            setSubmitNote("Your account isn't linked to a merchant. Contact support.digislips@gmail.com.", true)
+          } else if (err && err.status === 400) {
+            setSubmitNote('Some details were rejected by the server. Check the fields above and try again.', true)
+          } else {
+            setSubmitNote('Something went wrong creating the promotion. Please try again.', true)
+          }
+        })
       })
 
       // --- preview rendering ---

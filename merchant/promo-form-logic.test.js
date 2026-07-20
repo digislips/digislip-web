@@ -2,6 +2,7 @@ const {
   PROMOTION_TYPES,
   defaultsForType,
   validatePromotionForm,
+  buildCreatePromotionPayload,
 } = require('./promo-form-logic');
 
 // Mirrors the backend's validatePromotionPayload rules (digislip-web#9 PRD /
@@ -169,5 +170,92 @@ describe('defaultsForType', () => {
 
   test('PROMOTION_TYPES lists both supported types', () => {
     expect(PROMOTION_TYPES).toEqual(['stamp_card', 'coupon']);
+  });
+});
+
+// buildCreatePromotionPayload turns the form's collected values (strings,
+// straight from inputs) into the exact JSON body create-promotion expects
+// (digislip-backend#31): numeric stamps_required/claim_cap/cooldown_hours,
+// stamps_required omitted for coupons, expires_at null when never_expires.
+
+function collectedStampCard(overrides) {
+  return Object.assign({
+    title: 'Coffee club',
+    type: 'stamp_card',
+    stamps_required: '8',
+    description: 'Buy any coffee to earn a stamp.',
+    reward_description: 'Free coffee',
+    expires_at: '2026-12-31',
+    never_expires: false,
+    claim_cap: '',
+    cooldown_hours: '24',
+  }, overrides);
+}
+
+function collectedCoupon(overrides) {
+  return Object.assign({
+    title: '10% off',
+    type: 'coupon',
+    stamps_required: '',
+    description: 'Show this coupon at checkout.',
+    reward_description: '10% off your order',
+    expires_at: '2026-12-31',
+    never_expires: false,
+    claim_cap: '1',
+    cooldown_hours: '0',
+  }, overrides);
+}
+
+describe('buildCreatePromotionPayload', () => {
+  test('stamp card payload carries text fields through and numeric-coerces stamps_required/claim_cap/cooldown_hours', () => {
+    expect(buildCreatePromotionPayload(collectedStampCard())).toEqual({
+      title: 'Coffee club',
+      type: 'stamp_card',
+      description: 'Buy any coffee to earn a stamp.',
+      reward_description: 'Free coffee',
+      expires_at: '2026-12-31',
+      stamps_required: 8,
+      claim_cap: null,
+      cooldown_hours: 24,
+    });
+  });
+
+  test('coupon payload omits stamps_required entirely', () => {
+    const payload = buildCreatePromotionPayload(collectedCoupon());
+    expect(payload).not.toHaveProperty('stamps_required');
+    expect(payload).toEqual({
+      title: '10% off',
+      type: 'coupon',
+      description: 'Show this coupon at checkout.',
+      reward_description: '10% off your order',
+      expires_at: '2026-12-31',
+      claim_cap: 1,
+      cooldown_hours: 0,
+    });
+  });
+
+  test('never_expires sends expires_at as null, even if a stale date string is present', () => {
+    const payload = buildCreatePromotionPayload(collectedStampCard({ never_expires: true, expires_at: '' }));
+    expect(payload.expires_at).toBeNull();
+  });
+
+  test('blank claim_cap becomes null (unlimited)', () => {
+    const payload = buildCreatePromotionPayload(collectedStampCard({ claim_cap: '' }));
+    expect(payload.claim_cap).toBeNull();
+  });
+
+  test('a numeric claim_cap string is coerced to a number', () => {
+    const payload = buildCreatePromotionPayload(collectedStampCard({ claim_cap: '5' }));
+    expect(payload.claim_cap).toBe(5);
+  });
+
+  test('cooldown_hours string is coerced to a number', () => {
+    const payload = buildCreatePromotionPayload(collectedStampCard({ cooldown_hours: '48' }));
+    expect(payload.cooldown_hours).toBe(48);
+  });
+
+  test('stamps_required string is coerced to a number', () => {
+    const payload = buildCreatePromotionPayload(collectedStampCard({ stamps_required: '12' }));
+    expect(payload.stamps_required).toBe(12);
   });
 });

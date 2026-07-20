@@ -34,10 +34,39 @@ function validatePromotionForm(values) {
   return { valid: Object.keys(errors).length === 0, errors: errors };
 }
 
+// Turns the form's collected values (strings, straight from inputs, already
+// passed through validatePromotionForm) into the exact JSON body
+// create-promotion expects (digislip-backend#31 / _shared/validate-promotion-payload):
+// numeric stamps_required/claim_cap/cooldown_hours, stamps_required omitted
+// for coupons (backend ignores it either way, but omitting keeps the
+// request honest about what the type uses), expires_at null when
+// never_expires is set.
+function buildCreatePromotionPayload(values) {
+  values = values || {};
+
+  var payload = {
+    title: values.title,
+    type: values.type,
+    description: values.description,
+    reward_description: values.reward_description,
+    expires_at: values.never_expires ? null : values.expires_at,
+  };
+
+  if (values.type === 'stamp_card') {
+    payload.stamps_required = Number(values.stamps_required);
+  }
+
+  payload.claim_cap = isBlank(values.claim_cap) ? null : Number(values.claim_cap);
+  payload.cooldown_hours = Number(values.cooldown_hours);
+
+  return payload;
+}
+
 if (typeof module !== 'undefined') {
   module.exports = {
     PROMOTION_TYPES: PROMOTION_TYPES,
     defaultsForType: defaultsForType,
     validatePromotionForm: validatePromotionForm,
+    buildCreatePromotionPayload: buildCreatePromotionPayload,
   };
 }
