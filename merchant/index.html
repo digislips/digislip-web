@@ -131,6 +131,7 @@
 
     .promo-row {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 16px;
       background: var(--card);
@@ -187,6 +188,63 @@
       color: var(--muted);
     }
 
+    .row-actions { flex-shrink: 0; }
+    .toggle-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--faint);
+      background: var(--page);
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .toggle-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .toggle-btn.reactivate {
+      border-color: var(--green-bd);
+      color: var(--green-dk);
+      background: var(--green-lt);
+    }
+    .toggle-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .confirm-box {
+      flex-basis: 100%;
+      margin-top: 4px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--faint);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .confirm-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .confirm-actions button {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--faint);
+      background: var(--card);
+      color: var(--text);
+    }
+    .confirm-actions button.btn-danger {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+    .confirm-actions button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .row-error {
+      flex-basis: 100%;
+      font-size: 11px;
+      color: var(--red);
+      margin-top: 4px;
+    }
+
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -225,10 +283,25 @@
       var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
       var content = document.getElementById('content')
 
+      var promotions = []
+      var rowUi = {} // id -> { state: 'idle' | 'confirm' | 'saving', error: string|null }
+
       function escapeHtml(str) {
         return String(str).replace(/[&<>"']/g, function (c) {
           return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
         })
+      }
+
+      function findPromotion(id) {
+        for (var i = 0; i < promotions.length; i++) {
+          if (String(promotions[i].id) === String(id)) return promotions[i]
+        }
+        return null
+      }
+
+      function toggleErrorMessage(status) {
+        if (status === 403) return "Your account isn't linked to a merchant. Contact support.digislips@gmail.com."
+        return 'Could not update this promotion. Please try again.'
       }
 
       function renderEmpty() {
@@ -252,27 +325,127 @@
           '</div>'
       }
 
-      function renderList(promotions) {
-        var rows = promotions.map(function (promo) {
-          var state = promo.active ? 'active' : 'inactive'
-          return '' +
-            '<div class="promo-row">' +
-              '<div class="promo-row-main">' +
-                '<div class="promo-row-title">' + escapeHtml(promo.title || 'Untitled promotion') + '</div>' +
-                '<div class="promo-row-meta">' +
-                  '<span class="promo-row-type">' + escapeHtml(typeLabel(promo.type)) + '</span>' +
-                  ' · ' + escapeHtml(formatPromotionSummary(promo)) +
-                '</div>' +
-              '</div>' +
-              '<div class="promo-row-side">' +
-                '<span class="state-pill ' + state + '">' + escapeHtml(formatStateLabel(promo.active)) + '</span>' +
-                '<span class="promo-row-expiry">' + escapeHtml(formatExpiryLabel(promo.expires_at)) + '</span>' +
+      function renderRow(promo) {
+        var ui = rowUi[promo.id] || { state: 'idle' }
+        var state = promo.active ? 'active' : 'inactive'
+        var id = escapeHtml(promo.id)
+
+        var actionHtml
+        if (ui.state === 'saving') {
+          actionHtml = '<button type="button" class="toggle-btn" disabled>' +
+            (promo.active ? 'Deactivating…' : 'Reactivating…') + '</button>'
+        } else if (ui.state === 'confirm') {
+          actionHtml = '<button type="button" class="toggle-btn" data-action="toggle" data-id="' + id + '" disabled>' +
+            toggleActionLabel(promo.active) + '</button>'
+        } else {
+          actionHtml = '<button type="button" class="toggle-btn' + (promo.active ? '' : ' reactivate') +
+            '" data-action="toggle" data-id="' + id + '">' + toggleActionLabel(promo.active) + '</button>'
+        }
+
+        var confirmHtml = ''
+        if (promo.active && (ui.state === 'confirm' || ui.state === 'saving')) {
+          var disabled = ui.state === 'saving' ? ' disabled' : ''
+          confirmHtml =
+            '<div class="confirm-box">' +
+              escapeHtml(deactivateConfirmMessage()) +
+              '<div class="confirm-actions">' +
+                '<button type="button" class="btn-danger" data-action="confirm-deactivate" data-id="' + id + '"' + disabled + '>' +
+                  (ui.state === 'saving' ? 'Deactivating…' : 'Yes, deactivate') +
+                '</button>' +
+                '<button type="button" data-action="cancel-deactivate" data-id="' + id + '"' + disabled + '>Cancel</button>' +
               '</div>' +
             '</div>'
-        }).join('')
+        }
 
+        var errorHtml = ui.error ? '<div class="row-error">' + escapeHtml(ui.error) + '</div>' : ''
+
+        return '' +
+          '<div class="promo-row" data-id="' + id + '">' +
+            '<div class="promo-row-main">' +
+              '<div class="promo-row-title">' + escapeHtml(promo.title || 'Untitled promotion') + '</div>' +
+              '<div class="promo-row-meta">' +
+                '<span class="promo-row-type">' + escapeHtml(typeLabel(promo.type)) + '</span>' +
+                ' · ' + escapeHtml(formatPromotionSummary(promo)) +
+              '</div>' +
+            '</div>' +
+            '<div class="promo-row-side">' +
+              '<span class="state-pill ' + state + '">' + escapeHtml(formatStateLabel(promo.active)) + '</span>' +
+              '<span class="promo-row-expiry">' + escapeHtml(formatExpiryLabel(promo.expires_at)) + '</span>' +
+            '</div>' +
+            '<div class="row-actions">' + actionHtml + '</div>' +
+            confirmHtml +
+            errorHtml +
+          '</div>'
+      }
+
+      function renderList() {
+        var rows = promotions.map(renderRow).join('')
         content.innerHTML = '<div class="promo-list" id="promo-list">' + rows + '</div>'
       }
+
+      function performToggle(id, nextActive) {
+        rowUi[id] = { state: 'saving' }
+        renderList()
+
+        client.auth.getSession().then(function (result) {
+          var session = result.data && result.data.session
+          if (!session) {
+            window.location.href = '/merchant/login'
+            return null
+          }
+          return fetch(FUNCTIONS_URL + '/update-promotion?id=' + encodeURIComponent(id), {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer ' + session.access_token,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ active: nextActive }),
+          })
+        }).then(function (response) {
+          if (!response) return null
+          if (response.status === 401) {
+            window.location.href = '/merchant/login'
+            return null
+          }
+          if (response.status === 200) return response.json()
+          return response.json().catch(function () { return {} }).then(function (body) {
+            return Promise.reject({ status: response.status, body: body })
+          })
+        }).then(function (body) {
+          if (!body) return
+          var updated = body.promotion
+          promotions = promotions.map(function (p) { return p.id === updated.id ? updated : p })
+          rowUi[id] = { state: 'idle', error: null }
+          renderList()
+        }).catch(function (err) {
+          rowUi[id] = { state: 'idle', error: toggleErrorMessage(err && err.status) }
+          renderList()
+        })
+      }
+
+      // --- row actions: toggle / confirm / cancel ---
+      content.addEventListener('click', function (e) {
+        var target = e.target.closest && e.target.closest('[data-action]')
+        if (!target) return
+        var action = target.dataset.action
+        var id = target.dataset.id
+
+        if (action === 'toggle') {
+          var promo = findPromotion(id)
+          if (!promo) return
+          if (promo.active) {
+            rowUi[id] = { state: 'confirm' }
+            renderList()
+          } else {
+            performToggle(id, true)
+          }
+        } else if (action === 'cancel-deactivate') {
+          rowUi[id] = { state: 'idle' }
+          renderList()
+        } else if (action === 'confirm-deactivate') {
+          performToggle(id, false)
+        }
+      })
 
       // --- sign out ---
       document.body.addEventListener('click', function (e) {
@@ -307,11 +480,11 @@
         return response.json()
       }).then(function (body) {
         if (!body) return
-        var promotions = body.promotions || []
+        promotions = body.promotions || []
         if (promotions.length === 0) {
           renderEmpty()
         } else {
-          renderList(promotions)
+          renderList()
         }
       }).catch(function () {
         renderError()

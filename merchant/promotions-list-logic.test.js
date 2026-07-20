@@ -5,6 +5,8 @@ const {
   formatPromotionSummary,
   formatExpiryLabel,
   formatStateLabel,
+  toggleActionLabel,
+  deactivateConfirmMessage,
 } = require('./promotions-list-logic');
 
 describe('typeLabel', () => {
@@ -82,5 +84,29 @@ describe('formatStateLabel', () => {
 
   test('inactive', () => {
     expect(formatStateLabel(false)).toBe('Inactive');
+  });
+});
+
+describe('toggleActionLabel', () => {
+  test('offers to deactivate an active promotion', () => {
+    expect(toggleActionLabel(true)).toBe('Deactivate');
+  });
+
+  test('offers to reactivate an inactive promotion', () => {
+    expect(toggleActionLabel(false)).toBe('Reactivate');
+  });
+});
+
+describe('deactivateConfirmMessage', () => {
+  test('warns that stamping stops immediately for in-progress cards, and that issued rewards remain redeemable', () => {
+    const message = deactivateConfirmMessage();
+    expect(message).toMatch(/immediately/i);
+    expect(message).toMatch(/already.*(partway|progress)/i);
+    expect(message).toMatch(/redeemable/i);
+  });
+
+  test('is a non-empty string', () => {
+    expect(typeof deactivateConfirmMessage()).toBe('string');
+    expect(deactivateConfirmMessage().length).toBeGreaterThan(0);
   });
 });

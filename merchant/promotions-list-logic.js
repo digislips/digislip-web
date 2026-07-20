@@ -35,6 +35,16 @@ function formatStateLabel(active) {
   return active ? 'Active' : 'Inactive';
 }
 
+function toggleActionLabel(active) {
+  return active ? 'Deactivate' : 'Reactivate';
+}
+
+function deactivateConfirmMessage() {
+  return 'Deactivating stops all further stamping on this promotion immediately, ' +
+    'including customers already partway through a stamp card. ' +
+    'Already-issued rewards will still be redeemable. Are you sure?';
+}
+
 if (typeof module !== 'undefined') {
   module.exports = {
     typeLabel: typeLabel,
@@ -43,5 +53,7 @@ if (typeof module !== 'undefined') {
     formatPromotionSummary: formatPromotionSummary,
     formatExpiryLabel: formatExpiryLabel,
     formatStateLabel: formatStateLabel,
+    toggleActionLabel: toggleActionLabel,
+    deactivateConfirmMessage: deactivateConfirmMessage,
   };
 }
