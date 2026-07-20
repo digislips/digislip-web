@@ -202,9 +202,11 @@
     details.advanced[open] summary::before { content: '▾ '; }
     details.advanced .field:last-child { margin-bottom: 14px; }
 
+    .submit-row { display: flex; gap: 10px; }
+
     .btn {
+      flex: 1;
       display: block;
-      width: 100%;
       background: var(--blue);
       color: #fff;
       font-family: 'DM Mono', monospace;
@@ -216,9 +218,30 @@
       border-radius: 10px;
       cursor: pointer;
       transition: opacity 0.15s;
+      text-align: center;
     }
     .btn:hover { opacity: 0.88; }
     .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn-secondary {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      border: 1px solid var(--faint);
+      background: var(--page);
+      color: var(--text);
+      padding: 14px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--blue); color: var(--blue); }
     .submit-note {
       font-size: 11px;
       color: var(--muted);
@@ -407,7 +430,10 @@
           </div>
         </details>
 
-        <button type="button" class="btn" id="submit-btn">Create promotion</button>
+        <div class="submit-row">
+          <a href="/merchant" class="btn-secondary">Cancel</a>
+          <button type="button" class="btn" id="submit-btn">Create promotion</button>
+        </div>
         <p class="submit-note" id="submit-note"></p>
       </div>
 
