@@ -51,6 +51,18 @@ function copyButtonLabel(copied) {
   return copied ? 'Copied' : 'Copy';
 }
 
+function formatClaimCap(claimCap) {
+  if (claimCap === null || claimCap === undefined || claimCap === '') return 'Unlimited';
+  var n = Number(claimCap);
+  return n + (n === 1 ? ' time per customer' : ' times per customer');
+}
+
+function formatCooldownHours(cooldownHours) {
+  var n = Number(cooldownHours) || 0;
+  if (n === 0) return 'No cooldown';
+  return n + (n === 1 ? ' hour' : ' hours');
+}
+
 function deactivateConfirmMessage() {
   return 'Deactivating stops all further stamping on this promotion immediately, ' +
     'including customers already partway through a stamp card. ' +
@@ -70,5 +82,7 @@ if (typeof module !== 'undefined') {
     buildPromoPayloadUrl: buildPromoPayloadUrl,
     nfcPayloadExplainer: nfcPayloadExplainer,
     copyButtonLabel: copyButtonLabel,
+    formatClaimCap: formatClaimCap,
+    formatCooldownHours: formatCooldownHours,
   };
 }

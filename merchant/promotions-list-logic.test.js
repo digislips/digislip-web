@@ -10,6 +10,8 @@ const {
   buildPromoPayloadUrl,
   nfcPayloadExplainer,
   copyButtonLabel,
+  formatClaimCap,
+  formatCooldownHours,
 } = require('./promotions-list-logic');
 
 describe('typeLabel', () => {
@@ -141,5 +143,33 @@ describe('copyButtonLabel', () => {
 
   test('reads "Copied" right after a successful copy', () => {
     expect(copyButtonLabel(true)).toBe('Copied');
+  });
+});
+
+describe('formatClaimCap', () => {
+  test('reads "Unlimited" when there is no cap', () => {
+    expect(formatClaimCap(null)).toBe('Unlimited');
+  });
+
+  test('uses singular phrasing for a cap of 1', () => {
+    expect(formatClaimCap(1)).toBe('1 time per customer');
+  });
+
+  test('uses plural phrasing for a cap greater than 1', () => {
+    expect(formatClaimCap(5)).toBe('5 times per customer');
+  });
+});
+
+describe('formatCooldownHours', () => {
+  test('reads "No cooldown" for a value of 0', () => {
+    expect(formatCooldownHours(0)).toBe('No cooldown');
+  });
+
+  test('uses singular phrasing for a cooldown of 1 hour', () => {
+    expect(formatCooldownHours(1)).toBe('1 hour');
+  });
+
+  test('uses plural phrasing for a cooldown greater than 1 hour', () => {
+    expect(formatCooldownHours(24)).toBe('24 hours');
   });
 });
