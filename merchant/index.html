@@ -139,16 +139,29 @@
       border-radius: 14px;
       padding: 16px 20px;
     }
-    .promo-row-main { flex: 1; min-width: 0; }
+    .promo-row-main { flex: 1; min-width: 0; cursor: pointer; }
+    .promo-row-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
     .promo-row-title {
+      flex: 1;
+      min-width: 0;
       font-family: 'Syne', sans-serif;
       font-weight: 700;
       font-size: 16px;
-      margin-bottom: 4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .chevron-icon {
+      flex-shrink: 0;
+      color: var(--muted);
+      transition: transform 0.15s;
+    }
+    .chevron-icon.expanded { transform: rotate(180deg); }
     .promo-row-meta {
       font-size: 12px;
       color: var(--muted);
@@ -245,6 +258,57 @@
       margin-top: 4px;
     }
 
+    .promo-detail {
+      flex-basis: 100%;
+      margin-top: 4px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--faint);
+    }
+    .promo-detail-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .promo-url-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .promo-url {
+      flex: 1;
+      min-width: 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      background: var(--page);
+      border: 1px solid var(--faint);
+      border-radius: 8px;
+      padding: 10px 12px;
+      word-break: break-all;
+    }
+    .copy-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--faint);
+      background: var(--card);
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .copy-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .copy-btn.copied {
+      border-color: var(--green-bd);
+      color: var(--green-dk);
+      background: var(--green-lt);
+    }
+
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -285,6 +349,15 @@
 
       var promotions = []
       var rowUi = {} // id -> { state: 'idle' | 'confirm' | 'saving', error: string|null }
+      var expandUi = {} // id -> { expanded: bool, copied: bool }
+      var copyTimers = {} // id -> setTimeout handle, so rapid re-copies don't fight over the "Copied" reset
+
+      var COPY_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>'
+      var CHECK_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+      function CHEVRON_ICON(expanded) {
+        return '<svg class="chevron-icon' + (expanded ? ' expanded' : '') + '" width="18" height="18" viewBox="0 0 24 24" ' +
+          'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'
+      }
 
       function escapeHtml(str) {
         return String(str).replace(/[&<>"']/g, function (c) {
@@ -327,6 +400,7 @@
 
       function renderRow(promo) {
         var ui = rowUi[promo.id] || { state: 'idle' }
+        var expand = expandUi[promo.id] || { expanded: false, copied: false }
         var state = promo.active ? 'active' : 'inactive'
         var id = escapeHtml(promo.id)
 
@@ -359,10 +433,30 @@
 
         var errorHtml = ui.error ? '<div class="row-error">' + escapeHtml(ui.error) + '</div>' : ''
 
+        var payloadUrl = buildPromoPayloadUrl(promo.id)
+        var detailHtml = ''
+        if (expand.expanded) {
+          detailHtml =
+            '<div class="promo-detail">' +
+              '<div class="promo-detail-note">' + escapeHtml(nfcPayloadExplainer()) + '</div>' +
+              '<div class="promo-url-row">' +
+                '<div class="promo-url">' + escapeHtml(payloadUrl) + '</div>' +
+                '<button type="button" class="copy-btn' + (expand.copied ? ' copied' : '') +
+                  '" data-action="copy-url" data-id="' + id + '" data-url="' + escapeHtml(payloadUrl) + '">' +
+                  (expand.copied ? CHECK_ICON : COPY_ICON) +
+                  '<span>' + copyButtonLabel(expand.copied) + '</span>' +
+                '</button>' +
+              '</div>' +
+            '</div>'
+        }
+
         return '' +
           '<div class="promo-row" data-id="' + id + '">' +
-            '<div class="promo-row-main">' +
-              '<div class="promo-row-title">' + escapeHtml(promo.title || 'Untitled promotion') + '</div>' +
+            '<div class="promo-row-main" data-action="toggle-expand" data-id="' + id + '">' +
+              '<div class="promo-row-title-row">' +
+                '<div class="promo-row-title">' + escapeHtml(promo.title || 'Untitled promotion') + '</div>' +
+                CHEVRON_ICON(expand.expanded) +
+              '</div>' +
               '<div class="promo-row-meta">' +
                 '<span class="promo-row-type">' + escapeHtml(typeLabel(promo.type)) + '</span>' +
                 ' · ' + escapeHtml(formatPromotionSummary(promo)) +
@@ -375,6 +469,7 @@
             '<div class="row-actions">' + actionHtml + '</div>' +
             confirmHtml +
             errorHtml +
+            detailHtml +
           '</div>'
       }
 
@@ -444,6 +539,22 @@
           renderList()
         } else if (action === 'confirm-deactivate') {
           performToggle(id, false)
+        } else if (action === 'toggle-expand') {
+          var current = expandUi[id] || { expanded: false, copied: false }
+          expandUi[id] = { expanded: !current.expanded, copied: false }
+          renderList()
+        } else if (action === 'copy-url') {
+          var url = target.dataset.url
+          if (!navigator.clipboard || !navigator.clipboard.writeText) return
+          navigator.clipboard.writeText(url).then(function () {
+            expandUi[id] = { expanded: true, copied: true }
+            renderList()
+            if (copyTimers[id]) clearTimeout(copyTimers[id])
+            copyTimers[id] = setTimeout(function () {
+              expandUi[id] = { expanded: true, copied: false }
+              renderList()
+            }, 2000)
+          })
         }
       })
 

@@ -7,6 +7,9 @@ const {
   formatStateLabel,
   toggleActionLabel,
   deactivateConfirmMessage,
+  buildPromoPayloadUrl,
+  nfcPayloadExplainer,
+  copyButtonLabel,
 } = require('./promotions-list-logic');
 
 describe('typeLabel', () => {
@@ -108,5 +111,35 @@ describe('deactivateConfirmMessage', () => {
   test('is a non-empty string', () => {
     expect(typeof deactivateConfirmMessage()).toBe('string');
     expect(deactivateConfirmMessage().length).toBeGreaterThan(0);
+  });
+});
+
+describe('buildPromoPayloadUrl', () => {
+  test('builds the NFC/App Link claim URL from a promotion id', () => {
+    expect(buildPromoPayloadUrl('c48db1c9-1234-4abc-8def-000000000000'))
+      .toBe('https://digislips.co.za/promo/c48db1c9-1234-4abc-8def-000000000000');
+  });
+});
+
+describe('nfcPayloadExplainer', () => {
+  test('explains the URL is for programming an NFC chip to let customers tap to claim', () => {
+    const message = nfcPayloadExplainer();
+    expect(message).toMatch(/NFC/);
+    expect(message).toMatch(/tap/i);
+    expect(message).toMatch(/claim/i);
+  });
+
+  test('contains no em dashes, per house style', () => {
+    expect(nfcPayloadExplainer()).not.toMatch(/—/);
+  });
+});
+
+describe('copyButtonLabel', () => {
+  test('reads "Copy" before the URL has been copied', () => {
+    expect(copyButtonLabel(false)).toBe('Copy');
+  });
+
+  test('reads "Copied" right after a successful copy', () => {
+    expect(copyButtonLabel(true)).toBe('Copied');
   });
 });

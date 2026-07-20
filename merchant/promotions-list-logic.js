@@ -39,6 +39,18 @@ function toggleActionLabel(active) {
   return active ? 'Deactivate' : 'Reactivate';
 }
 
+function buildPromoPayloadUrl(promotionId) {
+  return 'https://digislips.co.za/promo/' + promotionId;
+}
+
+function nfcPayloadExplainer() {
+  return 'Program this URL onto an NFC chip so customers can tap to claim this promotion.';
+}
+
+function copyButtonLabel(copied) {
+  return copied ? 'Copied' : 'Copy';
+}
+
 function deactivateConfirmMessage() {
   return 'Deactivating stops all further stamping on this promotion immediately, ' +
     'including customers already partway through a stamp card. ' +
@@ -55,5 +67,8 @@ if (typeof module !== 'undefined') {
     formatStateLabel: formatStateLabel,
     toggleActionLabel: toggleActionLabel,
     deactivateConfirmMessage: deactivateConfirmMessage,
+    buildPromoPayloadUrl: buildPromoPayloadUrl,
+    nfcPayloadExplainer: nfcPayloadExplainer,
+    copyButtonLabel: copyButtonLabel,
   };
 }
